@@ -5,6 +5,8 @@ import { startSync } from "./store/sync";
 import { Sidebar } from "./components/Sidebar";
 import { ChatView } from "./components/ChatView";
 import { MemoryView } from "./components/MemoryView";
+import { ArtifactsView } from "./artifacts/ArtifactsView";
+import { ArtifactPanel } from "./artifacts/ArtifactPanel";
 import { ConnectionBanner } from "./components/ConnectionBanner";
 import { VoiceOverlay } from "./voice/VoiceOverlay";
 
@@ -56,7 +58,16 @@ export function App() {
       </AnimatePresence>
 
       <main className="flex min-w-0 flex-1">
-        {view === "memory" ? <MemoryView onMenu={() => setSheet(true)} /> : <ChatView onMenu={() => setSheet(true)} />}
+        {view === "memory" ? (
+          <MemoryView onMenu={() => setSheet(true)} />
+        ) : view === "artifacts" ? (
+          <ArtifactsView onMenu={() => setSheet(true)} />
+        ) : (
+          <>
+            <ChatView onMenu={() => setSheet(true)} />
+            <ArtifactPanel />
+          </>
+        )}
       </main>
 
       <ConnectionBanner />

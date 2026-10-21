@@ -27,13 +27,15 @@ export interface TurnState {
   at: number;
 }
 
+export type View = "chat" | "memory" | "artifacts";
+
 export type Connection = "connecting" | "online" | "offline";
 
 interface ChatState {
   conversations: Conversation[];
   conversationsLoaded: boolean;
   activeId: string;
-  view: "chat" | "memory";
+  view: View;
   convs: Record<string, ConvState>;
   pending: Record<string, PendingMessage[]>;
   live: Record<string, { turnId: string; text: string } | undefined>;
@@ -44,7 +46,7 @@ interface ChatState {
   connection: Connection;
 
   setActive: (id: string) => void;
-  setView: (view: "chat" | "memory") => void;
+  setView: (view: View) => void;
   setConnection: (c: Connection) => void;
   loadConversations: () => Promise<void>;
   newConversation: () => Promise<void>;

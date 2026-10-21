@@ -121,7 +121,7 @@ function AssistantBlock({
             case "ui":
               return (
                 <div key={item.key} className="my-1">
-                  <GenUIBlock part={item.part} onAction={onSend} />
+                  <GenUIBlock part={item.part} result={item.result} onAction={onSend} />
                 </div>
               );
             case "ask":

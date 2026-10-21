@@ -12,7 +12,7 @@ export interface ToolCall {
 
 export type AssistantItem =
   | { kind: "text"; key: string; text: string }
-  | { kind: "ui"; key: string; part: ToolCallPart }
+  | { kind: "ui"; key: string; part: ToolCallPart; result?: ToolResultPart }
   | { kind: "ask"; key: string; input: AskUserInput; callId: string; answered: boolean }
   | { kind: "tools"; key: string; steps: ToolCall[][] }
   | { kind: "approval"; key: string; call: ToolCall };
@@ -21,6 +21,9 @@ export type Block =
   | { kind: "user"; key: string; text: string; source?: string; pending?: PendingMessage; steering?: boolean }
   | { kind: "event"; key: string; text: string; source?: string }
   | { kind: "assistant"; key: string; turnId: string | null; items: AssistantItem[]; live?: string; running?: boolean };
+
+/** Tool calls rendered as generative UI (through GenUIBlock) instead of activity chips. */
+export const GENUI_TOOLS = new Set(["present", "render_ui", "artifact_create", "artifact_update"]);
 
 export function textOf(m: Message): string {
   return m.parts
@@ -108,8 +111,8 @@ export function buildBlocks(
         if (p.text.trim()) pushItem({ kind: "text", key, text: p.text });
         stepCalls = null;
       } else if (p.type === "tool-call") {
-        if (p.toolName === "render_ui") {
-          pushItem({ kind: "ui", key, part: p });
+        if (GENUI_TOOLS.has(p.toolName)) {
+          pushItem({ kind: "ui", key, part: p, result: results.get(p.toolCallId) });
           stepCalls = null;
         } else if (p.toolName === "ask_user") {
           pushItem({ kind: "ask", key, input: p.input as AskUserInput, callId: p.toolCallId, answered: lastUserSeq > m.seq });

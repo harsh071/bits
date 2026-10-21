@@ -1,4 +1,5 @@
 import {
+  AppWindow,
   AlarmClock,
   Brain,
   FilePen,
@@ -115,6 +116,23 @@ export function toolMeta(call: ToolCall): ToolMeta {
   if (name === "write_file") {
     const p = field(input, "path", "file");
     return { icon: FilePen, label: done ? "Wrote" : "Writing", detail: p ? base(p) : "a file" };
+  }
+  if (name.startsWith("artifact_") || name === "present") {
+    const op = name.slice(9);
+    const which = field(input, "title", "id", "name");
+    const action = field(input, "action");
+    const verbs: Record<string, [string, string]> = {
+      create: ["Building", "Built"],
+      update: ["Updating", "Updated"],
+      run: [action ? `Running ${action} in` : "Running an action in", action ? `Ran ${action} in` : "Ran an action in"],
+      data: ["Editing data in", "Edited data in"],
+      get: ["Opening", "Looked at"],
+      list: ["Checking artifacts", "Checked artifacts"],
+      delete: ["Deleting", "Deleted"],
+    };
+    if (name === "present") return { icon: AppWindow, label: done ? "Drew a view" : "Drawing a view", detail: field(input, "title") || undefined };
+    const [ing, ed] = verbs[op] ?? [humanize(name), humanize(name)];
+    return { icon: AppWindow, label: done ? ed : ing, detail: op === "list" ? undefined : which ? clip(which, 40) : "an artifact" };
   }
   if (isMcpTool(name)) {
     const parts = name.replace(/^mcp_+/, "").split("__");

@@ -10,6 +10,48 @@ import { buildBlocks } from "../lib/blocks";
 import { useTheme } from "../store/theme";
 import { useVoice } from "../voice/voice";
 import { VoiceOverlay } from "../voice/VoiceOverlay";
+import { installArtifactMock } from "./mockFetch";
+import { ArtifactEmbed } from "../artifacts/ArtifactEmbed";
+
+installArtifactMock();
+const FX_ARTIFACT = "fx-reading-list-a1b2c3";
+
+const PRESENTS: { name: string; title?: string; program: string }[] = [
+  {
+    name: "stats + callout",
+    title: "August at a glance",
+    program: `root = Stack([stats, note])
+stats = StatGroup([rev, orders, refunds])
+rev = Stat("Revenue", "$48.2k", "+6.1%", "up")
+orders = Stat("Orders", "140", "+12", "up")
+refunds = Stat("Refunds", "9", "-2", "down")
+note = Callout("On track", "Revenue is ahead of target by 4%.", "success")`,
+  },
+  {
+    name: "form with $ui + @Say",
+    program: `root = Card("Dinner tonight", "Pick a few things and I’ll find recipes", [cuisine, guests, veg, go, note])
+cuisine = Select("Cuisine", ["Italian", "Thai", "Mexican", "Japanese"], $ui.cuisine, "Any", change: @Set($ui.cuisine, $event))
+guests = TextInput("Guests", $ui.guests, kind: "number", change: @Set($ui.guests, $event))
+veg = Checkbox("Vegetarian", $ui.veg, change: @Set($ui.veg, $event))
+go = Button("Find recipes", "primary", press: @Say("Find dinner recipes for tonight with my picks"))
+note = Text("Your picks stay on this card.", "muted", when: $ui.cuisine)`,
+  },
+  {
+    name: "RecordTable + KeyValue + Progress + List",
+    title: "Trip prep",
+    program: `root = Stack([table, facts, prog, todo])
+table = RecordTable("Flights", [{key: "leg", label: "Leg"}, {key: "when", label: "When"}, {key: "price", label: "Price"}], [{leg: "YYZ → LIS", when: "Fri 18:05", price: "$612"}, {leg: "LIS → YYZ", when: "Mon 11:40", price: "$587"}])
+facts = KeyValue([{key: "Hotel", value: "Memmo Alfama"}, {key: "Nights", value: 3}])
+prog = Progress("Packing", 60, 100)
+todo = List(["Passport", "Adapter", "Sunscreen"])`,
+  },
+  {
+    name: "broken program (issues note)",
+    program: `root = Stack([ok, bad])
+ok = Text("This line renders fine.")
+bad = Sparkle("not a component")`,
+  },
+];
 
 const STATES: MascotState[] = ["idle", "thinking", "working", "listening", "speaking", "waiting", "offline"];
 
@@ -198,6 +240,18 @@ function sampleMessages(): Message[] {
       { type: "tool-result", toolCallId: "c7", toolName: "write_file", output: { status: "needs_approval", approvalId: "ap1", reason: "Writes outside the Bits home folder." } },
     ]),
     msg("assistant", [
+      { type: "text", text: "I also made you a reading list you can keep using." },
+      { type: "tool-call", toolCallId: "c10", toolName: "present", input: { title: PRESENTS[0].title, program: PRESENTS[0].program } },
+      { type: "tool-call", toolCallId: "c11", toolName: "artifact_create", input: { title: "Reading list", kind: "list" } },
+    ]),
+    msg("tool", [
+      { type: "tool-result", toolCallId: "c10", toolName: "present", output: { ok: true } },
+      { type: "tool-result", toolCallId: "c11", toolName: "artifact_create", output: { id: FX_ARTIFACT, title: "Reading list" } },
+    ]),
+    msg("assistant", [
+      { type: "tool-call", toolCallId: "c12", toolName: "artifact_create", input: { title: "Habit tracker", kind: "tracker" } },
+    ]),
+    msg("assistant", [
       { type: "tool-call", toolCallId: "c9", toolName: "ask_user", input: { question: "Which notes app should I keep this in?", options: ["Notion", "Apple Notes", "Just Bits memory"] } },
     ]),
   ];
@@ -279,7 +333,20 @@ export default function Fixtures() {
             </div>
           </div>
           <div className="min-w-0">
-            <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">Generative UI catalog</h2>
+            <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">Agentable · present</h2>
+            <div className="mb-12 flex flex-col gap-8">
+              {PRESENTS.map((p) => (
+                <div key={p.name}>
+                  <div className="mb-2 font-mono text-[11.5px] text-faint">{p.name}</div>
+                  <GenUIBlock part={{ type: "tool-call", toolCallId: p.name, toolName: "present", input: { title: p.title, program: p.program } }} onAction={onSend} />
+                </div>
+              ))}
+            </div>
+            <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">Artifact (mocked fetch)</h2>
+            <div className="mb-12">
+              <ArtifactEmbed id={FX_ARTIFACT} />
+            </div>
+            <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">Legacy render_ui catalog</h2>
             <div className="flex flex-col gap-8">
               {NODES.map(({ name, node }) => (
                 <div key={name}>

@@ -1,4 +1,5 @@
-import { Brain, House, Moon, MessageCircle, Plus, Sun } from "lucide-react";
+import { AppWindow, Brain, House, Moon, MessageCircle, Plus, Sun } from "lucide-react";
+import { useArtifacts } from "../store/artifacts";
 import { HOME, useChat } from "../store/chat";
 import { useTheme } from "../store/theme";
 import { shortTime } from "../lib/text";
@@ -88,6 +89,15 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           label="Home"
           dot={dotFor(HOME)}
           onClick={go(() => setActive(HOME))}
+        />
+        <NavItem
+          active={view === "artifacts"}
+          icon={<AppWindow size={16} />}
+          label="Artifacts"
+          onClick={go(() => {
+            useArtifacts.getState().openPage(null);
+            setView("artifacts");
+          })}
         />
         <NavItem active={view === "memory"} icon={<Brain size={16} />} label="What Bits knows" onClick={go(() => setView("memory"))} />
       </nav>

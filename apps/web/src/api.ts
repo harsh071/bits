@@ -1,5 +1,8 @@
 import type {
   Approval,
+  Artifact,
+  ArtifactActivity,
+  ArtifactMeta,
   Conversation,
   MemoryOverview,
   Message,
@@ -81,6 +84,9 @@ async function request<T>(method: string, path: string, body?: unknown, init?: R
   return (await res.blob()) as T;
 }
 
+/** The daemon also returns `dataVersion` (bumped on every data change). */
+export type FullArtifact = Artifact & { dataVersion?: number };
+
 export interface MessagesPage {
   messages: Message[];
   lastSeq: number;
@@ -113,6 +119,16 @@ export const api = {
   runRoutine: (name: string) => request<{ turnId: string }>("POST", `/routines/${encodeURIComponent(name)}/run`),
   setRoutine: (name: string, enabled: boolean) =>
     request<{ ok: true }>("PATCH", `/routines/${encodeURIComponent(name)}`, { enabled }),
+
+  artifacts: () => request<ArtifactMeta[]>("GET", "/artifacts"),
+  artifact: (id: string) => request<FullArtifact>("GET", `/artifacts/${encodeURIComponent(id)}`),
+  artifactActivity: (id: string) => request<ArtifactActivity[]>("GET", `/artifacts/${encodeURIComponent(id)}/activity`),
+  runAction: (id: string, action: string, input: unknown, by: "person" | "agent") =>
+    request<{ data: Record<string, unknown>; dataVersion?: number }>(
+      "POST",
+      `/artifacts/${encodeURIComponent(id)}/actions/${encodeURIComponent(action)}`,
+      { input: input ?? {}, by },
+    ),
 
   voiceConfig: () => request<VoiceConfig>("GET", "/voice/config"),
   transcribe: (audio: Blob) => {

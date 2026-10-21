@@ -36,10 +36,10 @@ const ICONS: Record<string, LucideIcon> = {
   hash: L.Hash, smile: L.Smile, gamepad: L.Gamepad2, game: L.Gamepad2, headphones: L.Headphones, battery: L.BatteryMedium,
 };
 
-export function iconFor(name?: string | null): LucideIcon | null {
+export function iconFor(name?: string | null, fallback = true): LucideIcon | null {
   if (!name) return null;
   const key = name.toLowerCase().replace(/icon$/, "").replace(/[^a-z0-9]/g, "");
-  return ICONS[key] ?? ICONS[key.replace(/s$/, "")] ?? L.Sparkles;
+  return ICONS[key] ?? ICONS[key.replace(/s$/, "")] ?? (fallback ? L.Sparkles : null);
 }
 
 const ACCENTS: Accent[] = ["violet", "blue", "green", "amber", "rose", "slate"];

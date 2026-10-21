@@ -424,3 +424,108 @@ body {
     padding-left: 78px;
   }
 }
+
+/* ---------- Agentable (@agentable-ui/ui) → Bits tokens ----------
+   Bits tokens already switch for light/dark, so one mapping covers both themes. The :not(#…) bumps
+   specificity above Agentable's own light/dark :root rules regardless of stylesheet order. */
+:root:not(#bits-ag) {
+  --ag-bg: var(--surface);
+  --ag-fg: var(--ink);
+  --ag-muted: var(--muted);
+  --ag-line: var(--line);
+  --ag-panel: var(--surface-2);
+  --ag-accent: var(--accent);
+  --ag-accent-fg: #ffffff;
+  --ag-danger: var(--danger);
+  --ag-success: var(--success);
+  --ag-warning: var(--warning);
+  --ag-agent: var(--a-blue);
+  --ag-radius: 12px;
+  --ag-font: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ag-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ag-shadow: var(--shadow-lg);
+}
+
+/* Light polish so generated UI reads like the rest of Bits. */
+[data-bits-genui] {
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+[data-bits-genui] [data-agentable-card] {
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+}
+[data-bits-genui] [data-agentable-card-header] h3 {
+  font-size: 15px;
+}
+[data-bits-genui] [data-agentable-stat] {
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 12px 16px;
+}
+[data-bits-genui] [data-agentable-stat-value] {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+[data-bits-genui] [data-agentable-callout] {
+  border: 0;
+  border-radius: 14px;
+  background: var(--a-violet-soft);
+  padding: 11px 14px;
+}
+[data-bits-genui] [data-agentable-callout][data-kind="success"] {
+  background: var(--a-green-soft);
+}
+[data-bits-genui] [data-agentable-callout][data-kind="warning"] {
+  background: var(--a-amber-soft);
+}
+[data-bits-genui] [data-agentable-callout][data-kind="error"] {
+  background: var(--a-rose-soft);
+}
+[data-bits-genui] [data-agentable-button] {
+  border-radius: 999px;
+  padding: 7px 15px;
+}
+[data-bits-genui] [data-agentable-button="primary"] {
+  box-shadow: 0 4px 14px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+[data-bits-genui] [data-agentable-progress] progress {
+  height: 8px;
+  border-radius: 999px;
+}
+[data-bits-genui] [data-agentable-list] li::marker {
+  color: var(--faint);
+}
+/* Inside stacks the field's own bottom margin doubles the gap. */
+[data-bits-genui] [data-agentable-surface-body] [data-agentable-field] {
+  margin-bottom: 0;
+}
+[data-bits-genui] [data-agentable-label] {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+/* Bits shows action errors as a toast, so hide the renderer's inline copy. */
+[data-bits-genui] [data-agentable-surface-error] {
+  display: none;
+}
+/* Agentable's confirm <dialog>: Tailwind preflight zeroes margins, which un-centers native dialogs. */
+dialog[data-agentable-confirm] {
+  margin: auto;
+  width: min(440px, calc(100vw - 32px));
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+  font-family: var(--ag-font);
+}
+dialog[data-agentable-confirm]::backdrop {
+  background: rgba(20, 16, 35, 0.3);
+  backdrop-filter: blur(3px);
+}
+dialog[data-agentable-confirm] button {
+  border-radius: 999px;
+}
+[data-bits-genui] [data-agentable-button] {
+  align-self: flex-start;
+  justify-content: center;
+}
