@@ -1,0 +1,32 @@
+{
+  "name": "@bits/daemon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file-if-exists=../../.env --watch --disable-warning=ExperimentalWarning src/main.ts",
+    "start": "node --env-file-if-exists=../../.env --disable-warning=ExperimentalWarning src/main.ts",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-force-exit test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@agentable-ui/core": "link:../../../agentable-ui/packages/core",
+    "@agentable-ui/lang": "link:../../../agentable-ui/packages/lang",
+    "@agentable-ui/ui": "link:../../../agentable-ui/packages/ui",
+    "@ai-sdk/anthropic": "4.0.85",
+    "@ai-sdk/openai": "4.0.99",
+    "@ai-sdk/openai-compatible": "3.0.75",
+    "@bits/protocol": "workspace:*",
+    "@hono/node-server": "2.1.5",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "ai": "7.0.148",
+    "croner": "10.0.1",
+    "gray-matter": "4.0.3",
+    "hono": "4.13.13",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "7.0.2"
+  }
+}

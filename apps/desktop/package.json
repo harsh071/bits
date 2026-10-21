@@ -1,0 +1,16 @@
+{
+  "name": "@bits/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/main.js",
+  "description": "Bits desktop shell: tray, global hotkey quick-ask overlay, notifications. The agent itself runs in the daemon.",
+  "scripts": {
+    "dev": "BITS_WEB_URL=http://localhost:5173 electron .",
+    "start": "electron .",
+    "typecheck": "echo 'desktop: plain JS, nothing to typecheck'"
+  },
+  "devDependencies": {
+    "electron": "45.0.0"
+  }
+}

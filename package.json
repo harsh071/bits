@@ -1,0 +1,22 @@
+{
+  "name": "bits",
+  "private": true,
+  "type": "module",
+  "description": "Bits \u2014 an open-source, local-first, always-on personal agent with voice and generative UI.",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @bits/daemon --filter @bits/web dev",
+    "dev:daemon": "pnpm --filter @bits/daemon dev",
+    "dev:web": "pnpm --filter @bits/web dev",
+    "dev:desktop": "pnpm --filter @bits/desktop dev",
+    "build": "pnpm -r build",
+    "start": "pnpm --filter @bits/daemon start",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "service:install": "node scripts/install-service.mjs",
+    "service:uninstall": "node scripts/install-service.mjs uninstall"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@11.9.0"
+}
