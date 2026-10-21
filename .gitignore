@@ -6,3 +6,5 @@ out
 *.log
 .DS_Store
 .bits-dev
+dist-demo
+.vercel

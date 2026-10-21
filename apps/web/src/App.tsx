@@ -9,6 +9,8 @@ import { ArtifactsView } from "./artifacts/ArtifactsView";
 import { ArtifactPanel } from "./artifacts/ArtifactPanel";
 import { ConnectionBanner } from "./components/ConnectionBanner";
 import { VoiceOverlay } from "./voice/VoiceOverlay";
+import { DemoBanner } from "./components/DemoBanner";
+import { DEMO } from "./lib/demo";
 
 export function App() {
   const view = useChat((s) => s.view);
@@ -26,7 +28,9 @@ export function App() {
   }, [sheet]);
 
   return (
-    <div className="flex h-dvh w-full overflow-hidden bg-bg">
+    <div className="flex h-dvh w-full flex-col overflow-hidden bg-bg">
+      {DEMO && <DemoBanner />}
+    <div className="flex min-h-0 w-full flex-1 overflow-hidden">
       <aside className="hidden w-[264px] flex-none border-r border-line bg-bg-2 md:block">
         <Sidebar />
       </aside>
@@ -72,6 +76,7 @@ export function App() {
 
       <ConnectionBanner />
       <VoiceOverlay />
+    </div>
     </div>
   );
 }
