@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { motion } from "motion/react";
 import {
   ArrowRight,
@@ -29,6 +29,16 @@ const DEMO = "/demo/";
 const IFH = "https://www.interfacesforhuman.com";
 const AGENTABLE = "https://agentable.interfacesforhuman.com";
 
+// Contact form → the Google Form's responses (entry ids come from the form's page source).
+const FORM_POST = "https://docs.google.com/forms/d/e/1FAIpQLSeuNYUcE3aDdJstjZCnqjaNTc669LioYAAi1HQ17oNLLQgy4w/formResponse";
+const FORM_FIELDS = {
+  name: "entry.829985136",
+  email: "entry.909276728",
+  /** "How can we help" (a Paragraph question). The audience choice is prefixed to it. */
+  help: null as string | null,
+};
+const AUDIENCES = ["Just me", "Team", "Enterprise"] as const;
+
 // Exactly the Quick start from README.md.
 const INSTALL: { cmd: string; note?: string }[] = [
   { cmd: "cp .env.example .env", note: "add ANTHROPIC_API_KEY (or OPENAI_API_KEY, or set BITS_MODEL=local:<model>)" },
@@ -51,6 +61,7 @@ export function App() {
         <Connectors />
         <Flexible />
         <Install />
+        <Contact />
       </main>
       <Footer />
     </div>
@@ -149,6 +160,7 @@ function Nav() {
           <a className="hover:text-ink" href="#local">Features</a>
           <a className="hover:text-ink" href="#connectors">Connectors</a>
           <a className="hover:text-ink" href="#install">Install</a>
+          <a className="hover:text-ink" href="#contact">Contact</a>
           <a className="hover:text-ink" href={DOCS} target="_blank" rel="noreferrer">Docs</a>
         </nav>
         <div className="flex-1" />
@@ -599,6 +611,114 @@ function Install() {
               ))}
             </ol>
           </div>
+        </Reveal>
+      </Wrap>
+    </section>
+  );
+}
+
+// ---------- contact ----------
+
+const field =
+  "h-12 w-full rounded-[14px] border border-line-2 bg-surface px-4 text-[16px] text-ink outline-none transition-colors placeholder:text-faint focus:border-accent";
+
+function Contact() {
+  const [audience, setAudience] = useState<(typeof AUDIENCES)[number]>("Just me");
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    if (form.get("company_url")) return setState("sent"); // honeypot: bots fill every field
+    const body = new URLSearchParams();
+    body.set(FORM_FIELDS.name, String(form.get("name") ?? "").trim());
+    body.set(FORM_FIELDS.email, String(form.get("email") ?? "").trim());
+    if (FORM_FIELDS.help) body.set(FORM_FIELDS.help, `[${audience}] ${String(form.get("help") ?? "").trim()}`);
+    setState("sending");
+    try {
+      // Google Forms doesn't send CORS headers, so the response is opaque; a network failure still throws.
+      await fetch(FORM_POST, { method: "POST", mode: "no-cors", body });
+      setState("sent");
+    } catch {
+      setState("error");
+    }
+  };
+
+  return (
+    <section id="contact" className="border-t border-line py-20 sm:py-28">
+      <Wrap className="grid gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-16">
+        <Reveal>
+          <Eyebrow>Contact</Eyebrow>
+          <h2 className="font-serif text-[clamp(38px,5vw,56px)] leading-[1.02] tracking-[-0.02em]">Want help bringing Bits in?</h2>
+          <p className="mt-6 text-[17px] leading-relaxed text-ink-2">
+            Setting it up for yourself, rolling it out to a team, or wiring it into your company’s tools. Tell us what you need and we’ll get back to you.
+          </p>
+        </Reveal>
+        <Reveal delay={0.08} className="min-w-0">
+          <Panel className="p-5 sm:p-7">
+            {state === "sent" ? (
+              <div className="flex flex-col items-start gap-3 py-6" role="status">
+                <Mascot size={44} state="speaking" title="" />
+                <h3 className="font-serif text-[30px] leading-tight">Thanks, we got it.</h3>
+                <p className="text-[16px] text-ink-2">We’ll reply to the email you gave us.</p>
+              </div>
+            ) : (
+              <form onSubmit={submit} className="flex flex-col gap-5">
+                <fieldset>
+                  <legend className="mb-2 text-[14px] font-medium">Who is this for?</legend>
+                  <div className="flex flex-wrap gap-2">
+                    {AUDIENCES.map((a) => (
+                      <button
+                        key={a}
+                        type="button"
+                        aria-pressed={audience === a}
+                        onClick={() => setAudience(a)}
+                        className={`h-10 rounded-full border px-4 text-[14px] transition-colors ${
+                          audience === a ? "border-ink bg-ink text-bg" : "border-line-2 bg-surface text-ink-2 hover:border-faint"
+                        }`}
+                      >
+                        {a}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[14px] font-medium">Name</span>
+                    <input name="name" autoComplete="name" required maxLength={200} className={field} />
+                  </label>
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[14px] font-medium">Email</span>
+                    <input name="email" type="email" autoComplete="email" required maxLength={320} className={field} />
+                  </label>
+                </div>
+                <label className="flex flex-col gap-2">
+                  <span className="text-[14px] font-medium">How can we help?</span>
+                  <textarea
+                    name="help"
+                    required
+                    rows={5}
+                    maxLength={4000}
+                    placeholder="What you’d like Bits to do, and the tools you use."
+                    className={`${field} h-auto resize-y py-3 leading-relaxed`}
+                  />
+                </label>
+                {/* Honeypot, hidden from people and screen readers. */}
+                <input name="company_url" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" />
+                <div className="flex flex-wrap items-center gap-4">
+                  <button
+                    type="submit"
+                    disabled={state === "sending"}
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 text-[15px] font-medium text-bg shadow-float transition-[box-shadow,transform] hover:shadow-lift active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {state === "sending" ? "Sending…" : "Send"}
+                    <ArrowRight size={17} aria-hidden />
+                  </button>
+                  {state === "error" && <p className="text-[14px] text-danger">That didn’t go through. Check your connection and try again.</p>}
+                </div>
+              </form>
+            )}
+          </Panel>
         </Reveal>
       </Wrap>
     </section>
