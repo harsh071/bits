@@ -50,5 +50,6 @@ function defaultModel() {
 
 function defaultFastModel() {
   if (process.env.ANTHROPIC_API_KEY) return "anthropic:claude-haiku-5-5";
+  if (process.env.OPENAI_API_KEY) return "openai:gpt-5.4-mini";
   return defaultModel();
 }
