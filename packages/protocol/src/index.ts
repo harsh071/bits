@@ -68,6 +68,8 @@ export interface Turn {
   trigger: "message" | "routine" | "webhook" | "resume";
   steps: number;
   error?: string | null;
+  /** Latest short status label ("Searching the web"), when the turn is live. */
+  activity?: string;
   createdAt: number;
   updatedAt: number;
 }

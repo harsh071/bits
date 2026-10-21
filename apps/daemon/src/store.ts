@@ -200,9 +200,13 @@ export class Store {
     this.db.prepare("UPDATE turns SET seen_seq = MAX(seen_seq, ?) WHERE id = ?").run(seq, id);
   }
 
+  private activities = new Map<string, string>();
+
   updateTurn(id: string, patch: { status?: TurnStatus; steps?: number; error?: string | null; leaseUntil?: number | null }, activity?: string) {
     const cur = this.getTurn(id);
     if (!cur) return;
+    if (activity) this.activities.set(id, activity);
+    if (patch.status && isTerminal(patch.status)) this.activities.delete(id);
     this.db
       .prepare("UPDATE turns SET status = ?, steps = ?, error = ?, lease_until = ?, updated_at = ? WHERE id = ?")
       .run(
@@ -224,7 +228,10 @@ export class Store {
         "SELECT * FROM turns WHERE conversation_id = ? AND status IN ('queued','running','waiting') ORDER BY created_at DESC LIMIT 1",
       )
       .get(conversationId) as Row | undefined;
-    return r ? rowToTurn(r) : null;
+    if (!r) return null;
+    const turn = rowToTurn(r);
+    const activity = this.activities.get(turn.id);
+    return activity ? { ...turn, activity } : turn;
   }
 
   /** Turns that need a worker: queued, or "running" with an expired lease (the daemon crashed mid-turn). */
