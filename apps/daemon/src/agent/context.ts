@@ -5,6 +5,7 @@ import { config } from "../config.ts";
 import * as memory from "../memory.ts";
 import type { Store } from "../store.ts";
 import { isAnthropic } from "../models.ts";
+import { langGuide } from "../artifacts.ts";
 import type { ToolDef } from "./tools.ts";
 
 const CACHE = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
@@ -71,12 +72,18 @@ const MEMORY_RULES = `## Memory
 - Never store passwords, keys or card numbers. Honor "forget that" with memory_forget.
 - Routines (routine_save) are scheduled prompts to yourself; confirm the schedule in plain words after saving.`;
 
-const UI_RULES = `## Showing things
-You can render rich UI inline with render_ui. Prefer it for comparisons, options, plans, schedules, metrics, and sources. Put next steps in an "actions" node so the user can tap instead of type. Keep surrounding prose to a sentence or two and never duplicate what the UI shows.`;
+const UI_RULES = `## Showing things: intelligent UI
+You answer with interface, not just text, using Agentable (the user's own component library):
+- \`present\` — a one-off view inline in the chat (comparisons, options, plans, numbers, sources). Buttons reply to you with @Say.
+- Artifacts — when the user will come back to it or keep it updated (tracker, list, planner, log, board, form, dashboard), create one with \`artifact_create\`. It persists, appears in their Artifacts shelf, and its actions work for the user's taps, for you (artifact_run), and for any browser agent via WebMCP. Check \`artifact_list\` before creating a duplicate; update existing artifacts instead.
+- When the user mentions progress on something an artifact tracks ("did my run today"), update the artifact.
+Keep surrounding prose to a sentence or two and never repeat what the view shows.
+
+${langGuide()}`;
 
 const STYLE_RULES = `## Style
 - Lead with the answer or outcome. Short paragraphs. Markdown is fine in text mode.
-- When the user's message came by voice (it starts with [voice]), reply in 1–3 short spoken sentences with no markdown, lists or URLs — put details in render_ui instead.
+- When the user's message came by voice (it starts with [voice]), reply in 1–3 short spoken sentences with no markdown, lists or URLs — put details in a view instead.
 - Routine runs start with [routine: name]; deliver the result directly, as if you're checking in.`;
 
 const HELPER_RULES = `You are a focused helper agent working for Bits, a personal agent. Complete the task you're given using your tools, then reply with a compact report (facts, numbers, source URLs). You cannot talk to the user; make reasonable assumptions and state them. Be efficient: a few targeted searches beat many.`;
@@ -96,7 +103,13 @@ function userText(m: Message) {
     .join("\n");
   const time = new Date(m.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
   const tag =
-    m.meta?.source === "voice" ? "[voice] " : m.meta?.source === "routine" ? `[routine: ${m.meta.routine ?? "routine"}] ` : "";
+    m.meta?.source === "voice"
+      ? "[voice] "
+      : m.meta?.source === "routine"
+        ? `[routine: ${m.meta.routine ?? "routine"}] `
+        : m.meta?.source === "artifact"
+          ? `[artifact: ${m.meta.artifact}] `
+          : "";
   return `${tag}${text}\n<sent>${time}</sent>`;
 }
 

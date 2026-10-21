@@ -7,6 +7,7 @@ import { Runtime } from "./agent/runtime.ts";
 import { Scheduler } from "./scheduler.ts";
 import { closeConnectors, loadConnectors } from "./connectors.ts";
 import { createApp } from "./server.ts";
+import { Artifacts } from "./artifacts.ts";
 
 // Bits daemon: the always-on part. Clients (web, desktop overlay, phone, channels) are thin views
 // over the same conversations; the daemon runs the agent, routines and memory.
@@ -17,7 +18,8 @@ async function main() {
   const store = new Store(db);
   memory.reindex(db);
 
-  const runtime = new Runtime(store);
+  const artifacts = new Artifacts();
+  const runtime = new Runtime(store, artifacts);
   const scheduler = new Scheduler(store, runtime);
   runtime.nextRoutineInMs = () => scheduler.msUntilNext();
 
@@ -26,7 +28,7 @@ async function main() {
   runtime.start();
   scheduler.start();
 
-  const app = createApp(store, runtime, scheduler);
+  const app = createApp(store, runtime, scheduler, artifacts);
   const server = serve({ fetch: app.fetch, port: config.port, hostname: config.host }, (info) => {
     console.log(`[bits] awake at http://${config.host}:${info.port}  ·  model ${config.model}  ·  home ${config.home}`);
   });

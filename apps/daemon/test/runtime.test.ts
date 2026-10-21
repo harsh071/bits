@@ -16,6 +16,7 @@ const { openDb } = await import("../src/db.ts");
 const memory = await import("../src/memory.ts");
 const { Store } = await import("../src/store.ts");
 const { Runtime } = await import("../src/agent/runtime.ts");
+const { Artifacts, applyOps } = await import("../src/artifacts.ts");
 const { toModelMessages } = await import("../src/agent/context.ts");
 
 type Step = { text?: string; calls?: { name: string; input: unknown }[] };
@@ -61,7 +62,8 @@ setModelResolver((id) => (id === "mock:fast" ? fast : main));
 memory.initHome();
 const db = openDb(path.join(home, "state.db"));
 const store = new Store(db);
-const runtime = new Runtime(store);
+const artifacts = new Artifacts();
+const runtime = new Runtime(store, artifacts);
 
 async function until(pred: () => boolean, ms = 4000) {
   const start = Date.now();
@@ -83,7 +85,7 @@ test("a turn runs model → tools → model, saving every step", async () => {
     {
       calls: [
         { name: "memory_remember", input: { fact: "Likes oat milk flat whites" } },
-        { name: "render_ui", input: { ui: { type: "card", title: "Noted", children: [{ type: "text", text: "Oat milk ☕" }] } } },
+        { name: "present", input: { program: 'root = Card("Noted", [t])\nt = Text("Oat milk from now on")' } },
       ],
     },
     { text: "Got it — oat milk from now on." },
@@ -111,14 +113,14 @@ test("a turn runs model → tools → model, saving every step", async () => {
 });
 
 test("invalid generative UI goes back to the model as an error", async () => {
-  script = [{ calls: [{ name: "render_ui", input: { ui: { type: "chart", kind: "pie" } } }] }, { text: "Sorry, fixed." }];
+  script = [{ calls: [{ name: "present", input: { program: 'root = Pie("nope")' } }] }, { text: "Sorry, fixed." }];
   const conv = store.createConversation("t2");
   const { turnId } = runtime.sendMessage(conv.id, { id: "m2", text: "chart please" });
   await until(() => store.getTurn(turnId!)?.status === "done");
   const tool = store.getMessages(conv.id).find((m) => m.role === "tool")!;
   const r = tool.parts[0] as any;
   assert.equal(r.isError, true);
-  assert.match(String(r.output), /Invalid UI/);
+  assert.match(String(r.output), /unknown-component/);
 });
 
 test("risky actions wait for approval, then resume and run once", async () => {
@@ -199,5 +201,87 @@ test("unfinished tool calls get an 'interrupted' result so history stays valid",
   assert.deepEqual(
     msgs.map((m) => m.role),
     ["user", "assistant", "tool", "user"],
+  );
+});
+
+test("data ops: push with ids, toggle and remove by selector", () => {
+  let d: any = applyOps({}, [{ op: "push", path: "items", value: { text: "$input.text", done: false } }], { text: "Milk" });
+  assert.equal(d.items.length, 1);
+  const id = d.items[0].id;
+  assert.ok(id);
+  d = applyOps(d, [{ op: "toggle", path: "items[id=$input.id].done" }], { id });
+  assert.equal(d.items[0].done, true);
+  d = applyOps(d, [{ op: "increment", path: "stats.count", by: 2 }]);
+  assert.equal(d.stats.count, 2);
+  d = applyOps(d, [{ op: "remove", path: "items[id=$input.id]" }], { id });
+  assert.equal(d.items.length, 0);
+  assert.throws(() => applyOps(d, [{ op: "toggle", path: "items[id=zzz].done" }]), /Nothing matches/);
+});
+
+const habitProgram = `root = Card("Habits", [list, draft, add])
+list = List($data.habits)
+draft = TextInput("New habit", value: $ui.draft, change: @Set($ui.draft, $event))
+add = Button("Add", press: @Tool("add_habit", {name: $ui.draft}))`;
+
+test("artifacts: Bits creates one, a person runs an action, notify wakes Bits", async () => {
+  script = [
+    {
+      calls: [
+        {
+          name: "artifact_create",
+          input: {
+            title: "Habits",
+            kind: "tracker",
+            description: "Daily habits",
+            program: habitProgram,
+            data: { habits: [] },
+            actions: {
+              add_habit: {
+                description: "Add a habit",
+                input: { type: "object", properties: { name: { type: "string" } }, required: ["name"] },
+                ops: [{ op: "push", path: "habits", value: { title: "$input.name", streak: 0 } }],
+                notify: true,
+              },
+            },
+          },
+        },
+      ],
+    },
+    { text: "Made you a habit tracker." },
+  ];
+  const conv = store.createConversation("t8");
+  const { turnId } = runtime.sendMessage(conv.id, { id: "m8", text: "make me a habit tracker" });
+  await until(() => store.getTurn(turnId!)?.status === "done");
+  const created = store.getMessages(conv.id).flatMap((m) => m.parts).find((p: any) => p.type === "tool-result") as any;
+  assert.ok(!created.isError, JSON.stringify(created.output));
+  const id = created.output.id;
+  assert.deepEqual(artifacts.get(id).data, { habits: [] });
+
+  await assert.rejects(artifacts.runAction(id, "add_habit", {}, "person"), /Invalid input/);
+  await assert.rejects(artifacts.runAction(id, "nope", {}, "person"), /no action/);
+
+  script = [{ text: "Nice — added Stretch." }];
+  await artifacts.runAction(id, "add_habit", { name: "Stretch" }, "person");
+  assert.equal((artifacts.get(id).data as any).habits[0].title, "Stretch");
+  assert.equal(artifacts.activity(id)[0].by, "person");
+  await until(() => store.getMessages(conv.id).some((m) => m.meta?.source === "artifact"));
+  await until(() => store.activeTurn(conv.id) === null);
+  const last = store.getMessages(conv.id).at(-1)!;
+  assert.equal(last.role, "assistant");
+});
+
+test("artifacts: a view calling an undeclared action is rejected", () => {
+  assert.throws(
+    () =>
+      artifacts.create({
+        title: "Bad",
+        kind: "list",
+        description: "",
+        program: habitProgram,
+        data: {},
+        actions: { other: { description: "x", ops: [{ op: "set", path: "a", value: 1 }] } },
+        conversationId: "home",
+      }),
+    /unknown-action/,
   );
 });

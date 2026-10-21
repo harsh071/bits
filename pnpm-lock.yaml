@@ -6,19 +6,23 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
 
   apps/daemon:
     dependencies:
       '@agentable-ui/core':
-        specifier: link:../../../agentable-ui/packages/core
-        version: link:../../../agentable-ui/packages/core
+        specifier: 0.1.1
+        version: 0.1.1
       '@agentable-ui/lang':
-        specifier: link:../../../agentable-ui/packages/lang
-        version: link:../../../agentable-ui/packages/lang
+        specifier: 0.1.0
+        version: 0.1.0
       '@agentable-ui/ui':
-        specifier: link:../../../agentable-ui/packages/ui
-        version: link:../../../agentable-ui/packages/ui
+        specifier: 0.1.1
+        version: 0.1.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@ai-sdk/anthropic':
         specifier: 4.0.85
         version: 4.0.85(zod@4.6.7)
@@ -49,6 +53,9 @@ importers:
       hono:
         specifier: 4.13.13
         version: 4.13.13
+      react:
+        specifier: 19.3.1
+        version: 19.3.1
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -68,6 +75,21 @@ importers:
 
   apps/web:
     dependencies:
+      '@agentable-ui/core':
+        specifier: 0.1.1
+        version: 0.1.1
+      '@agentable-ui/genui':
+        specifier: 0.2.0
+        version: 0.2.0(react@19.3.1)
+      '@agentable-ui/lang':
+        specifier: 0.1.0
+        version: 0.1.0
+      '@agentable-ui/react':
+        specifier: 0.1.0
+        version: 0.1.0(react@19.3.1)
+      '@agentable-ui/ui':
+        specifier: 0.1.1
+        version: 0.1.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@bits/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
@@ -93,6 +115,9 @@ importers:
         specifier: 5.0.15
         version: 5.0.15(@types/react@19.3.0)(react@19.3.1)
     devDependencies:
+      '@agentable-ui/devtools':
+        specifier: 0.1.0
+        version: 0.1.0(react@19.3.1)
       '@tailwindcss/vite':
         specifier: 4.3.3
         version: 4.3.3(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
@@ -118,6 +143,36 @@ importers:
   packages/protocol: {}
 
 packages:
+
+  '@agentable-ui/core@0.1.1':
+    resolution: {integrity: sha512-IHpjt3odKiVKhrkL9R5qOZw6DOEo+g+lcMwiZYhgjyId6dLPPCLFT5cBfQov5pJsA7yju3Nt2KFuLJQYpdPaDQ==}
+
+  '@agentable-ui/devtools@0.1.0':
+    resolution: {integrity: sha512-7GI4zj1mbYFlTrqAee03f4iG36Ld3TiqeHrEbzOybziVg6K5jFRQS1cwV48E/9m4T/PX8BXZ7YteARixlHxp+w==}
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+
+  '@agentable-ui/genui@0.2.0':
+    resolution: {integrity: sha512-qEHQ5vRj7J0rb3dheHX5CKQ6mRLAqQyaAhm8A0Oee59k8J9kXHWzTxGlYxYuGwTmOIA0FYxhkFyvzua/solqPg==}
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+
+  '@agentable-ui/lang@0.1.0':
+    resolution: {integrity: sha512-3mrQrbfH+yoc/UDgKZY6wHiwjLkyiIHNttHqrDnooGoTOmp99dx0+KCizx1u+LBlM0A2uKK3GIDcF909ZeMZHA==}
+
+  '@agentable-ui/react@0.1.0':
+    resolution: {integrity: sha512-z03+XfN1SdqrH6EwiW3z0DYYxSjGTOSRVr9Z373AuOxsV+fOBD0p+sxF9+BqoLNH5+BmqK8SLMZQl/jkqcRn2g==}
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+
+  '@agentable-ui/ui@0.1.1':
+    resolution: {integrity: sha512-6WUyChdbWYLLBCR/ngoToD0+KzRHeDTAc/TSSnRpVAwY5wt/vv21CEXfBMkMAzngCi4kk3lew1OXUTwrLuIMzA==}
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+      react-dom: ^18.2.0 || ^19.0.0
 
   '@ai-sdk/anthropic@4.0.85':
     resolution: {integrity: sha512-nfv/vtR4HuNUZyCzdK37d2CaW1mzeZJlzSmC+4Jn8Dn8ces8R9HOAgF9d+8iwx+SedmzurKQQmNvJ7xYGBcPMQ==}
@@ -1628,6 +1683,38 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
+
+  '@agentable-ui/core@0.1.1': {}
+
+  '@agentable-ui/devtools@0.1.0(react@19.3.1)':
+    dependencies:
+      '@agentable-ui/core': 0.1.1
+      '@agentable-ui/react': 0.1.0(react@19.3.1)
+    optionalDependencies:
+      react: 19.3.1
+
+  '@agentable-ui/genui@0.2.0(react@19.3.1)':
+    dependencies:
+      '@agentable-ui/core': 0.1.1
+      '@agentable-ui/lang': 0.1.0
+      '@agentable-ui/react': 0.1.0(react@19.3.1)
+      react: 19.3.1
+
+  '@agentable-ui/lang@0.1.0':
+    dependencies:
+      '@agentable-ui/core': 0.1.1
+
+  '@agentable-ui/react@0.1.0(react@19.3.1)':
+    dependencies:
+      '@agentable-ui/core': 0.1.1
+      react: 19.3.1
+
+  '@agentable-ui/ui@0.1.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      '@agentable-ui/core': 0.1.1
+      '@agentable-ui/react': 0.1.0(react@19.3.1)
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
 
   '@ai-sdk/anthropic@4.0.85(zod@4.6.7)':
     dependencies:

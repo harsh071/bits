@@ -39,8 +39,8 @@ description: Use this when the user asks to research, compare, or evaluate optio
 
 1. Clarify the decision and constraints from memory first (budget, location, preferences in profile.md). Only ask if truly missing.
 2. Run 2–4 focused web searches; open the 3–6 most authoritative pages with web_fetch.
-3. Build a comparison: render_ui with a \`table\` (options × criteria) and a \`card\` with your pick and why.
-4. Cite sources as \`link\` nodes. Keep the written answer to 3–5 sentences.
+3. Build a comparison: present a comparison table (options × criteria) and a card with your pick and why.
+4. List sources in the view. Keep the written answer to 3–5 sentences.
 5. Save any new durable preference you learned with memory_remember.
 `;
 

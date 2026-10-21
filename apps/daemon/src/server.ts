@@ -11,6 +11,7 @@ import type { Runtime } from "./agent/runtime.ts";
 import type { Scheduler } from "./scheduler.ts";
 import { connectorStatus } from "./connectors.ts";
 import { speechToText, textToSpeech } from "./voice.ts";
+import type { Artifacts } from "./artifacts.ts";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -24,7 +25,7 @@ const MIME: Record<string, string> = {
   ".webmanifest": "application/manifest+json",
 };
 
-export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler) {
+export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, artifacts: Artifacts) {
   const app = new Hono();
 
   app.onError((err, c) => {
@@ -136,6 +137,22 @@ export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler) 
     const { enabled } = await c.req.json();
     memory.setRoutineEnabled(c.req.param("name"), !!enabled);
     return c.json({ ok: true });
+  });
+
+  // ----- artifacts -----
+  app.get("/api/artifacts", (c) => c.json(artifacts.list()));
+  app.get("/api/artifacts/:id", (c) => {
+    const id = c.req.param("id");
+    if (!artifacts.exists(id)) return c.json({ error: "not found" }, 404);
+    return c.json(artifacts.get(id));
+  });
+  app.get("/api/artifacts/:id/activity", (c) => c.json(artifacts.activity(c.req.param("id"), 100)));
+  // Run a declared action. `by` is "person" for UI clicks and "agent" for WebMCP calls from browser agents.
+  app.post("/api/artifacts/:id/actions/:action", async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const by = body.by === "agent" ? "agent" : "person";
+    const result = await artifacts.runAction(c.req.param("id"), c.req.param("action"), body.input ?? {}, by);
+    return c.json(result);
   });
 
   // ----- voice -----

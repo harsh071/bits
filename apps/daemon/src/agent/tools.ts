@@ -6,7 +6,7 @@ import { Cron } from "croner";
 import { config } from "../config.ts";
 import * as memory from "../memory.ts";
 import type { Store } from "../store.ts";
-import { validateUI } from "./genui.ts";
+import { checkProgram, formatIssues, type Artifacts } from "../artifacts.ts";
 
 // Every capability Bits has is a tool with a risk level. The Sentinel (sentinel.ts) decides,
 // per call, whether a risk level can run on its own, needs a quick auto-review, or needs you.
@@ -19,6 +19,7 @@ export type Risk = "read" | "write" | "external" | "destructive";
 
 export interface ToolContext {
   store: Store;
+  artifacts: Artifacts;
   conversationId: string;
   turnId: string;
   toolCallId: string;
@@ -342,32 +343,134 @@ export const builtinTools: ToolDef[] = [
 
   // ----- talking back -----
   tool({
-    name: "render_ui",
-    description: `Show rich UI to the user inline in the conversation. Use it whenever structure beats prose: comparisons (table), options (list/cards), plans & schedules (timeline/checklist), numbers (stat/chart), sources (link), next steps (actions). Keep the accompanying text short — don't repeat what the UI shows.
-The \`ui\` argument is ONE node tree from this catalog (JSON):
-- {type:"stack"|"row", gap?:"sm"|"md"|"lg", children:[...]}; {type:"grid", columns?:2|3|4, children:[...]}
-- {type:"card", title?, subtitle?, icon?: lucide icon name, accent?: "violet"|"blue"|"green"|"amber"|"rose"|"slate", children?:[...]}
-- {type:"heading", text, level?:1|2|3}; {type:"text", text (markdown), tone?:"default"|"muted"}
-- {type:"stat", label, value, delta?, trend?:"up"|"down"|"flat"}
-- {type:"list", ordered?, items:[{title, subtitle?, meta?, icon?, href?}]}
-- {type:"table", columns:[string], rows:[[string|number]]}
-- {type:"chart", kind:"bar"|"line"|"area", data:[{...}], x: key, series:[keys], title?}
-- {type:"timeline", items:[{time, title, detail?, done?}]}; {type:"checklist", items:[{text, done?}]}
-- {type:"image", src, alt?, caption?}; {type:"link", href, title, description?, image?}
-- {type:"callout", tone?:"info"|"success"|"warning"|"danger", title?, text}
-- {type:"badge", text, accent?}; {type:"progress", value 0-100, label?}; {type:"divider"}
-- {type:"actions", buttons:[{label, message, style?:"primary"|"secondary"}]} — a click sends \`message\` to you as the user.`,
-    input: z.object({
-      title: z.string().optional(),
-      ui: z.record(z.string(), z.unknown()).describe("a single UI node tree"),
-    }),
+    name: "present",
+    description: `Show a one-off interactive view inline in the conversation, written in Agentable Lang (see "Agentable Lang" in your instructions). Use it whenever structure beats prose: comparisons, options, plans, numbers, sources, next steps. Buttons that should reply to you use @Say("…"). Keep surrounding text to a sentence or two. For something the user will come back to or keep updating (a tracker, list, plan, log), create an artifact instead.`,
+    input: z.object({ title: z.string().optional(), program: z.string().describe("Agentable Lang program; first line defines root") }),
     risk: "read",
     mainOnly: true,
     activity: () => "Preparing a view",
-    async execute({ ui }) {
-      const errors = validateUI(ui);
-      if (errors.length) throw new Error(`Invalid UI — fix and call again:\n${errors.slice(0, 8).join("\n")}`);
+    async execute({ program }) {
+      const issues = checkProgram(program);
+      if (issues.length) throw new Error(`The view has problems — fix and call present again:\n${formatIssues(issues)}`);
       return { shown: true };
+    },
+  }),
+
+  // ----- artifacts: persistent apps people, Bits and browser agents share -----
+  tool({
+    name: "artifact_create",
+    description: `Create an artifact: a small persistent app the user keeps (habit tracker, trip planner, reading list, budget, packing list, decision matrix, meal plan, CRM of people…). It has:
+- program: the view in Agentable Lang, reading $data.* and calling actions with @Tool("action_name", {…}); $ui.* for local view state.
+- data: the initial JSON data.
+- actions: named, data-only operations, e.g. {"add_item":{"description":"Add an item","input":{"type":"object","properties":{"text":{"type":"string"}},"required":["text"]},"ops":[{"op":"push","path":"items","value":{"text":"$input.text","done":false,"added":"$now"}}]},"toggle_item":{"description":"Check or uncheck an item","input":{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]},"ops":[{"op":"toggle","path":"items[id=$input.id].done"}]}}
+  Ops: set | merge | push | remove | increment | toggle on paths like "items", "trip.days", "items[id=$input.id].done". Values may use $input, $input.field, $id, $now. Pushed objects get an "id" automatically.
+  Add "notify": true to an action that should wake you (e.g. a form submit); "confirm": true if an agent must ask before running it.
+Every action becomes a button handler, a tool you can call (artifact_run), and a WebMCP tool browser agents can call. The artifact appears inline and in the user's Artifacts shelf.`,
+    input: z.object({
+      title: z.string(),
+      kind: z.string().describe("use-case type: tracker | planner | list | log | dashboard | form | board | other"),
+      description: z.string(),
+      icon: z.string().optional().describe("lucide icon name"),
+      program: z.string(),
+      data: z.record(z.string(), z.unknown()),
+      actions: z.record(z.string(), z.object({
+        description: z.string(),
+        input: z.record(z.string(), z.unknown()).optional(),
+        ops: z.array(z.object({ op: z.enum(["set", "merge", "push", "remove", "increment", "toggle"]), path: z.string(), value: z.unknown().optional(), by: z.number().optional() })).min(1),
+        confirm: z.boolean().optional(),
+        notify: z.boolean().optional(),
+      })),
+    }),
+    risk: "write",
+    mainOnly: true,
+    activity: (i) => `Building ${i.title ?? "an artifact"}`,
+    async execute(i, ctx) {
+      const a = ctx.artifacts.create({ ...i, actions: i.actions as any, conversationId: ctx.conversationId });
+      return { id: a.id, title: a.title, version: a.version, actions: Object.keys(a.actions) };
+    },
+  }),
+  tool({
+    name: "artifact_update",
+    description: "Change an artifact's view (program), title, description or actions. Data is kept; change data with artifact_data or artifact_run.",
+    input: z.object({
+      id: z.string(),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      program: z.string().optional(),
+      actions: z.record(z.string(), z.any()).optional(),
+    }),
+    risk: "write",
+    activity: () => "Updating an artifact",
+    async execute({ id, ...patch }, ctx) {
+      const a = ctx.artifacts.update(id, patch as any);
+      return { id: a.id, version: a.version, actions: Object.keys(a.actions) };
+    },
+  }),
+  tool({
+    name: "artifact_run",
+    description: "Run one of an artifact's declared actions, exactly as if the user pressed its button.",
+    input: z.object({ id: z.string(), action: z.string(), input: z.record(z.string(), z.unknown()).optional() }),
+    risk: "write",
+    activity: (i) => `Updating ${i.id?.replace(/-[a-z0-9]{6}$/, "") ?? "artifact"}`,
+    async execute({ id, action, input }, ctx) {
+      const { dataVersion } = await ctx.artifacts.runAction(id, action, input ?? {}, "bits");
+      return { ok: true, dataVersion };
+    },
+  }),
+  tool({
+    name: "artifact_data",
+    description: "Edit an artifact's data directly with ops (set | merge | push | remove | increment | toggle), for changes no declared action covers.",
+    input: z.object({
+      id: z.string(),
+      ops: z.array(z.object({ op: z.enum(["set", "merge", "push", "remove", "increment", "toggle"]), path: z.string(), value: z.unknown().optional(), by: z.number().optional() })).min(1),
+    }),
+    risk: "write",
+    activity: () => "Editing artifact data",
+    async execute({ id, ops }, ctx) {
+      const { dataVersion } = ctx.artifacts.patchData(id, ops as any);
+      return { ok: true, dataVersion };
+    },
+  }),
+  tool({
+    name: "artifact_get",
+    description: "Read an artifact: its view program, current data, actions and recent activity (who changed what).",
+    input: z.object({ id: z.string() }),
+    risk: "read",
+    activity: () => "Opening an artifact",
+    async execute({ id }, ctx) {
+      const a = ctx.artifacts.get(id);
+      const data = JSON.stringify(a.data);
+      return {
+        id: a.id,
+        title: a.title,
+        kind: a.kind,
+        version: a.version,
+        actions: Object.fromEntries(Object.entries(a.actions).map(([k, v]) => [k, { description: v.description, input: v.input }])),
+        data: data.length > 12_000 ? `${data.slice(0, 12_000)}…(truncated)` : a.data,
+        program: a.program,
+        recentActivity: ctx.artifacts.activity(id, 15),
+      };
+    },
+  }),
+  tool({
+    name: "artifact_list",
+    description: "List the user's artifacts.",
+    input: z.object({}),
+    risk: "read",
+    activity: () => "Looking at artifacts",
+    async execute(_i, ctx) {
+      return ctx.artifacts.list().map((a) => ({ id: a.id, title: a.title, kind: a.kind, description: a.description, updatedAt: new Date(a.updatedAt).toISOString() }));
+    },
+  }),
+  tool({
+    name: "artifact_delete",
+    description: "Delete an artifact (moves it to ~/.bits/trash).",
+    input: z.object({ id: z.string() }),
+    risk: "destructive",
+    activity: () => "Deleting an artifact",
+    async execute({ id }, ctx) {
+      ctx.artifacts.delete(id);
+      return { deleted: id };
     },
   }),
   tool({

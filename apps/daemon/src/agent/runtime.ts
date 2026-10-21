@@ -6,6 +6,8 @@ import { config } from "../config.ts";
 import * as memory from "../memory.ts";
 import { resolveModel } from "../models.ts";
 import type { Store } from "../store.ts";
+import type { Artifacts } from "../artifacts.ts";
+import type { ArtifactActivity, ArtifactMeta } from "@bits/protocol";
 import { buildInstructions, estimateTokens, toModelMessages } from "./context.ts";
 import { alwaysAllow, review } from "./sentinel.ts";
 import { builtinTools, type ToolDef } from "./tools.ts";
@@ -34,8 +36,11 @@ export class Runtime {
   nextRoutineInMs: () => number | null = () => null;
 
   readonly store: Store;
-  constructor(store: Store) {
+  readonly artifacts: Artifacts;
+  constructor(store: Store, artifacts: Artifacts) {
     this.store = store;
+    this.artifacts = artifacts;
+    artifacts.onNotify = (meta, action, input, by) => this.notifyFromArtifact(meta, action, input, by);
   }
 
   get tools(): ToolDef[] {
@@ -94,6 +99,23 @@ export class Runtime {
     this.maybeTitle(conversationId, text);
     this.tick();
     return { message, duplicate, turnId: turn.id, steering: false };
+  }
+
+  /** An artifact action marked notify:true ran — tell Bits, in the artifact's conversation. */
+  notifyFromArtifact(meta: ArtifactMeta, action: string, input: unknown, by: ArtifactActivity["by"]) {
+    const conversationId = this.store.getConversation(meta.conversationId) ? meta.conversationId : "home";
+    const who = by === "person" ? "The user" : by === "agent" ? "A browser agent" : "Bits";
+    const text = `${who} ran "${action}" on the artifact "${meta.title}" (${meta.id}) with ${JSON.stringify(input).slice(0, 1500)}. React if anything needs doing.`;
+    const active = this.store.activeTurn(conversationId);
+    const { message } = this.store.appendMessage({
+      conversationId,
+      role: "user",
+      parts: [{ type: "text", text }],
+      meta: { source: "artifact", artifact: meta.id, ...(active ? { steering: true } : {}) },
+    });
+    if (active) return;
+    this.store.createTurn(conversationId, "webhook", message.seq - 1);
+    this.tick();
   }
 
   startRoutine(name: string) {
@@ -347,6 +369,7 @@ export class Runtime {
     try {
       output = await def.execute(input, {
         store: this.store,
+        artifacts: this.artifacts,
         conversationId: turn.conversationId,
         turnId: turn.id,
         toolCallId: call.toolCallId,
@@ -388,6 +411,7 @@ export class Runtime {
         try {
           return await def.execute(input, {
             store: this.store,
+            artifacts: this.artifacts,
             conversationId: "helper",
             turnId: "helper",
             toolCallId: "helper",

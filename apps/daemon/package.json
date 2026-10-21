@@ -10,9 +10,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@agentable-ui/core": "link:../../../agentable-ui/packages/core",
-    "@agentable-ui/lang": "link:../../../agentable-ui/packages/lang",
-    "@agentable-ui/ui": "link:../../../agentable-ui/packages/ui",
+    "@agentable-ui/core": "0.1.1",
+    "@agentable-ui/lang": "0.1.0",
+    "@agentable-ui/ui": "0.1.1",
     "@ai-sdk/anthropic": "4.0.85",
     "@ai-sdk/openai": "4.0.99",
     "@ai-sdk/openai-compatible": "3.0.75",
@@ -23,6 +23,7 @@
     "croner": "10.0.1",
     "gray-matter": "4.0.3",
     "hono": "4.13.13",
+    "react": "19.3.1",
     "zod": "4.6.7"
   },
   "devDependencies": {
