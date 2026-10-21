@@ -496,22 +496,13 @@ body {
 [data-bits-genui] [data-agentable-list] li::marker {
   color: var(--faint);
 }
-/* Inside stacks the field's own bottom margin doubles the gap. */
-[data-bits-genui] [data-agentable-surface-body] [data-agentable-field] {
-  margin-bottom: 0;
-}
 [data-bits-genui] [data-agentable-label] {
   font-size: 13px;
   font-weight: 500;
   color: var(--ink-2);
 }
-/* Bits shows action errors as a toast, so hide the renderer's inline copy. */
-[data-bits-genui] [data-agentable-surface-error] {
-  display: none;
-}
-/* Agentable's confirm <dialog>: Tailwind preflight zeroes margins, which un-centers native dialogs. */
+/* Agentable's confirm <dialog>, in Bits' look. (Centering under Tailwind's reset is fixed upstream in ui 0.2.1.) */
 dialog[data-agentable-confirm] {
-  margin: auto;
   width: min(440px, calc(100vw - 32px));
   border: 1px solid var(--line);
   border-radius: 22px;
@@ -526,6 +517,5 @@ dialog[data-agentable-confirm] button {
   border-radius: 999px;
 }
 [data-bits-genui] [data-agentable-button] {
-  align-self: flex-start;
   justify-content: center;
 }

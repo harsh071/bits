@@ -10,9 +10,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@agentable-ui/core": "0.1.1",
-    "@agentable-ui/lang": "0.1.0",
-    "@agentable-ui/ui": "0.1.1",
+    "@agentable-ui/core": "0.2.0",
+    "@agentable-ui/lang": "0.2.1",
+    "@agentable-ui/ui": "0.2.1",
     "@ai-sdk/anthropic": "4.0.85",
     "@ai-sdk/openai": "4.0.99",
     "@ai-sdk/openai-compatible": "3.0.75",

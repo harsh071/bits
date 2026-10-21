@@ -14,6 +14,12 @@ minimumReleaseAgeExclude:
   - motion@14.5.0
   - vite@8.3.5
   - electron@45.0.0
+  - '@agentable-ui/core@0.2.0'
+  - '@agentable-ui/genui@0.3.1'
+  - '@agentable-ui/lang@0.2.1'
+  - '@agentable-ui/react@0.1.1'
+  - '@agentable-ui/ui@0.2.1'
+  - '@agentable-ui/devtools@0.1.1'
 onlyBuiltDependencies:
   - electron
   - esbuild
