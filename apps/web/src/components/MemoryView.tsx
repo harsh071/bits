@@ -8,7 +8,7 @@ import { Markdown } from "./Markdown";
 import { IconButton } from "./IconButton";
 import { Mascot } from "./Mascot";
 
-function Section({ icon, title, hint, children, action }: { icon: ReactNode; title: string; hint?: string; children: ReactNode; action?: ReactNode }) {
+export function Section({ icon, title, hint, children, action }: { icon: ReactNode; title: string; hint?: string; children: ReactNode; action?: ReactNode }) {
   return (
     <motion.section
       variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
@@ -27,7 +27,7 @@ function Section({ icon, title, hint, children, action }: { icon: ReactNode; tit
   );
 }
 
-function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button
       type="button"

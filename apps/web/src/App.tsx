@@ -5,6 +5,7 @@ import { startSync } from "./store/sync";
 import { Sidebar } from "./components/Sidebar";
 import { ChatView } from "./components/ChatView";
 import { MemoryView } from "./components/MemoryView";
+import { ConnectorsView } from "./components/ConnectorsView";
 import { ArtifactsView } from "./artifacts/ArtifactsView";
 import { ArtifactPanel } from "./artifacts/ArtifactPanel";
 import { ConnectionBanner } from "./components/ConnectionBanner";
@@ -64,6 +65,8 @@ export function App() {
       <main className="flex min-w-0 flex-1">
         {view === "memory" ? (
           <MemoryView onMenu={() => setSheet(true)} />
+        ) : view === "connectors" ? (
+          <ConnectorsView onMenu={() => setSheet(true)} />
         ) : view === "artifacts" ? (
           <ArtifactsView onMenu={() => setSheet(true)} />
         ) : (

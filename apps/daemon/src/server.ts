@@ -9,7 +9,8 @@ import * as memory from "./memory.ts";
 import type { Store } from "./store.ts";
 import type { Runtime } from "./agent/runtime.ts";
 import type { Scheduler } from "./scheduler.ts";
-import { connectorStatus } from "./connectors.ts";
+import { connectors } from "./connectors.ts";
+import { localOnly } from "./guard.ts";
 import { speechToText, textToSpeech } from "./voice.ts";
 import type { Artifacts } from "./artifacts.ts";
 
@@ -33,6 +34,9 @@ export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, 
     return c.json({ error: String(err.message ?? err) }, 400);
   });
 
+  // Block cross-site requests and DNS rebinding: a web page you visit must not be able to drive your agent.
+  app.use("*", localOnly());
+
   // Optional bearer token (set BITS_TOKEN when exposing the daemon beyond localhost).
   app.use("/api/*", async (c, next) => {
     if (!config.token) return next();
@@ -45,7 +49,7 @@ export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, 
     c.json({ ok: true, name: "bits", version: config.version, model: config.model, home: config.home } satisfies HealthInfo),
   );
 
-  app.get("/api/status", (c) => c.json({ model: config.model, fastModel: config.fastModel, voice: config.voice, connectors: connectorStatus }));
+  app.get("/api/status", (c) => c.json({ model: config.model, fastModel: config.fastModel, voice: config.voice, connectors: connectors.overview().connectors.map(({ name, state, tools, error }) => ({ name, ok: state === "connected", state, tools: tools.length, error })) }));
 
   // ----- live updates -----
   app.get("/api/events", (c) =>
@@ -155,6 +159,58 @@ export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, 
     return c.json(result);
   });
 
+  // ----- connectors -----
+  app.get("/api/connectors", (c) => c.json(connectors.overview()));
+  app.post("/api/connectors", async (c) => c.json(await connectors.add(await c.req.json())));
+  app.delete("/api/connectors/:name", async (c) => {
+    await connectors.remove(c.req.param("name"));
+    return c.json({ ok: true });
+  });
+  app.patch("/api/connectors/:name", async (c) => {
+    const { disabled } = await c.req.json();
+    await connectors.setDisabled(c.req.param("name"), !!disabled);
+    return c.json({ ok: true });
+  });
+  app.post("/api/connectors/:name/reconnect", async (c) => {
+    await connectors.reconnect(c.req.param("name"));
+    return c.json({ ok: true });
+  });
+  app.post("/api/connectors/:name/auth", async (c) => c.json({ url: await connectors.beginAuth(c.req.param("name")) }));
+  app.post("/api/connectors/:name/signout", async (c) => {
+    await connectors.signOut(c.req.param("name"));
+    return c.json({ ok: true });
+  });
+  // Write-only: values go in, only names ever come out.
+  app.put("/api/secrets/:name", async (c) => {
+    const { value } = await c.req.json();
+    connectors.setSecret(c.req.param("name"), String(value ?? ""));
+    return c.json({ ok: true });
+  });
+  app.delete("/api/secrets/:name", (c) => {
+    connectors.deleteSecret(c.req.param("name"));
+    return c.json({ ok: true });
+  });
+
+  // OAuth redirect target (RFC 8252 loopback). Outside /api: the provider's redirect carries no Bits token,
+  // so the single-use `state` we generated is what authenticates it.
+  app.get("/oauth/callback", async (c) => {
+    const { state, code, error, error_description } = c.req.query();
+    let ok = false;
+    let message: string;
+    if (error) message = `The provider said: ${error_description || error}`;
+    else if (!state || !code) message = "This page is missing its sign-in code.";
+    else {
+      try {
+        const name = await connectors.finishAuth(state, code);
+        ok = true;
+        message = `${name} is connected. You can close this tab.`;
+      } catch (e: any) {
+        message = String(e?.message ?? e);
+      }
+    }
+    return c.html(oauthPage(ok, message), ok ? 200 : 400, { "cache-control": "no-store", "referrer-policy": "no-referrer" });
+  });
+
   // ----- voice -----
   app.get("/api/voice/config", (c) => c.json({ stt: config.voice.stt, tts: config.voice.tts } satisfies VoiceConfig));
   app.post("/api/voice/transcribe", async (c) => {
@@ -191,4 +247,12 @@ export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, 
   });
 
   return app;
+}
+
+const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+
+function oauthPage(ok: boolean, message: string) {
+  return `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bits · ${ok ? "Connected" : "Sign-in failed"}</title>
+<style>body{font:15px/1.5 system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#f7f6f3;color:#1d1b26}@media(prefers-color-scheme:dark){body{background:#15141a;color:#ecebf2}}main{max-width:420px;padding:24px;text-align:center}h1{font-size:20px;margin:0 0 8px}</style>
+<main><h1>${ok ? "Connected" : "Sign-in didn’t finish"}</h1><p>${escapeHtml(message)}</p></main>${ok ? "<script>setTimeout(()=>window.close(),1500)</script>" : ""}`;
 }
