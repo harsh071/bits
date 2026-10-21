@@ -27,6 +27,7 @@ Bits has three parts: **apps & channels** (thin views), the **daemon** (runs the
 | Skills | `~/.bits/skills/<name>/SKILL.md` |
 | Routines | `~/.bits/routines/<name>.md` (frontmatter `schedule`, `enabled`) |
 | Connectors, policy | `~/.bits/connectors.json`, `~/.bits/policy.json` |
+| Connector keys, OAuth tokens | `~/.bits/secrets.enc` (AES-256-GCM; key in the OS keychain) |
 | Agent's files / shell cwd | `~/.bits/workspace/` |
 
 ## Scaling path

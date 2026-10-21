@@ -104,6 +104,7 @@ export type ServerEvent =
   | { type: "memory" } // memory/skills/routines files changed
   | { type: "artifact"; id: string; version: number; dataVersion: number } // refetch GET /api/artifacts/:id
   | { type: "artifacts" } // list changed
+  | { type: "connectors" } // connector list or status changed: refetch GET /api/connectors
   | { type: "ping" };
 
 // ---------- Generative UI ----------
@@ -251,4 +252,58 @@ export interface HealthInfo {
   version: string;
   model: string;
   home: string;
+}
+
+// ----- connectors (MCP servers) -----
+
+export type ConnectorAuth = "oauth" | "key" | "none";
+
+/** One-click connector templates. `key` presets need an API key the user creates with the provider. */
+export interface ConnectorPreset {
+  id: string;
+  name: string;
+  blurb: string;
+  auth: ConnectorAuth;
+  /** Fixed server URL; absent when the user pastes their own (e.g. Composio). */
+  url?: string;
+  urlHint?: string;
+  /** Where to create the key, and what to call it. */
+  keyUrl?: string;
+  keyLabel?: string;
+  docsUrl?: string;
+}
+
+export type ConnectorState = "connected" | "connecting" | "needs_auth" | "error" | "disabled";
+
+export interface ConnectorInfo {
+  name: string;
+  kind: "remote" | "local";
+  /** Remote: origin + path of the server (never headers). Local: the command name. */
+  target: string;
+  auth: ConnectorAuth;
+  preset?: string;
+  state: ConnectorState;
+  tools: { name: string; description: string; risk: "read" | "write" | "external" | "destructive" }[];
+  error?: string;
+  /** Secret names this connector needs that aren't in the vault yet. */
+  missingSecrets: string[];
+}
+
+export interface ConnectorsOverview {
+  connectors: ConnectorInfo[];
+  presets: ConnectorPreset[];
+  /** Names only. Values never leave the daemon. */
+  secrets: string[];
+  /** Where the vault key lives. */
+  keyStore: "keychain" | "secret-service" | "file";
+  configPath: string;
+}
+
+export interface AddConnectorBody {
+  name: string;
+  preset?: string;
+  url?: string;
+  auth?: ConnectorAuth;
+  /** For key auth: the API key. Stored in the vault, never in connectors.json. */
+  apiKey?: string;
 }

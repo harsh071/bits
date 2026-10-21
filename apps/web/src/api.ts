@@ -1,4 +1,7 @@
 import type {
+  AddConnectorBody,
+  ConnectorInfo,
+  ConnectorsOverview,
   Approval,
   Artifact,
   ArtifactActivity,
@@ -129,6 +132,17 @@ export const api = {
       `/artifacts/${encodeURIComponent(id)}/actions/${encodeURIComponent(action)}`,
       { input: input ?? {}, by },
     ),
+
+  connectors: () => request<ConnectorsOverview>("GET", "/connectors"),
+  addConnector: (body: AddConnectorBody) => request<ConnectorInfo>("POST", "/connectors", body),
+  removeConnector: (name: string) => request<{ ok: true }>("DELETE", `/connectors/${encodeURIComponent(name)}`),
+  setConnectorDisabled: (name: string, disabled: boolean) =>
+    request<{ ok: true }>("PATCH", `/connectors/${encodeURIComponent(name)}`, { disabled }),
+  reconnect: (name: string) => request<{ ok: true }>("POST", `/connectors/${encodeURIComponent(name)}/reconnect`),
+  beginAuth: (name: string) => request<{ url: string }>("POST", `/connectors/${encodeURIComponent(name)}/auth`),
+  signOut: (name: string) => request<{ ok: true }>("POST", `/connectors/${encodeURIComponent(name)}/signout`),
+  setSecret: (name: string, value: string) => request<{ ok: true }>("PUT", `/secrets/${encodeURIComponent(name)}`, { value }),
+  deleteSecret: (name: string) => request<{ ok: true }>("DELETE", `/secrets/${encodeURIComponent(name)}`),
 
   voiceConfig: () => request<VoiceConfig>("GET", "/voice/config"),
   transcribe: (audio: Blob) => {

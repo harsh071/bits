@@ -31,7 +31,8 @@ export class Runtime {
   private workers = new Map<string, { turnId: string; ctrl: AbortController }>();
   private compactTimers = new Map<string, NodeJS.Timeout>();
   private ticker: NodeJS.Timeout | null = null;
-  extraTools: ToolDef[] = [];
+  /** Connector (MCP) tools; a function because connectors come and go while the daemon runs. */
+  extraTools: () => ToolDef[] = () => [];
   /** Returns ms until the next routine fires (used to skip compaction when the agent will wake anyway). */
   nextRoutineInMs: () => number | null = () => null;
 
@@ -44,7 +45,7 @@ export class Runtime {
   }
 
   get tools(): ToolDef[] {
-    return [...builtinTools, ...this.extraTools];
+    return [...builtinTools, ...this.extraTools()];
   }
 
   start() {
