@@ -1,8 +1,8 @@
 node_modules
 dist
 out
-.env
-.env.local
+.env*
+!.env.example
 *.log
 .DS_Store
 .bits-dev
