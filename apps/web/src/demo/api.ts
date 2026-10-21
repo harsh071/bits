@@ -187,6 +187,8 @@ async function runTurn(conversationId: string, turnId: string, text: string) {
 
 // ---------- the api ----------
 
+const NO_CONNECTORS = "Connectors run in Bits on your own computer, so your keys never leave it. Install Bits to connect apps.";
+
 export const demoApi: Api = {
   health: () => later({ ok: true as const, version: "demo", model: "demo" }),
 
@@ -289,6 +291,29 @@ export const demoApi: Api = {
     emit({ type: "artifact", id, version: a.version, dataVersion: a.dataVersion });
     return later({ data: a.data, dataVersion: a.dataVersion });
   },
+
+  // Connectors need the real daemon (keys stay on your machine), so the demo only shows the gallery.
+  connectors: () =>
+    later({
+      connectors: [],
+      presets: [
+        { id: "composio", name: "Composio", blurb: "Gmail, Calendar, Slack, Drive and 250+ apps behind one key.", auth: "key" as const },
+        { id: "notion", name: "Notion", blurb: "Search, read and write pages and databases.", auth: "oauth" as const, url: "https://mcp.notion.com/mcp" },
+        { id: "linear", name: "Linear", blurb: "Issues, projects and comments.", auth: "oauth" as const, url: "https://mcp.linear.app/mcp" },
+        { id: "github", name: "GitHub", blurb: "Repos, issues and pull requests.", auth: "key" as const, url: "https://api.githubcopilot.com/mcp/" },
+      ],
+      secrets: [],
+      keyStore: "keychain" as const,
+      configPath: "~/.bits/connectors.json",
+    }),
+  addConnector: () => Promise.reject(new Error(NO_CONNECTORS)),
+  removeConnector: () => Promise.reject(new Error(NO_CONNECTORS)),
+  setConnectorDisabled: () => Promise.reject(new Error(NO_CONNECTORS)),
+  reconnect: () => Promise.reject(new Error(NO_CONNECTORS)),
+  beginAuth: () => Promise.reject(new Error(NO_CONNECTORS)),
+  signOut: () => Promise.reject(new Error(NO_CONNECTORS)),
+  setSecret: () => Promise.reject(new Error(NO_CONNECTORS)),
+  deleteSecret: () => Promise.reject(new Error(NO_CONNECTORS)),
 
   voiceConfig: () => later({ stt: "browser" as const, tts: "browser" as const }),
   transcribe: () => Promise.reject(new Error("In the demo, voice runs in your browser.")),
