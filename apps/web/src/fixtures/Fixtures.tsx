@@ -304,15 +304,23 @@ export default function Fixtures() {
 
       <VoiceOverlay />
       <div className="mx-auto max-w-[1100px] px-4 sm:px-8">
-        <h2 className="mt-10 mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">Mascot states</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-          {STATES.map((s) => (
-            <div key={s} className="flex flex-col items-center gap-3 rounded-[18px] border border-line bg-surface py-5">
-              <Mascot state={s} size={64} level={() => 0.3 + 0.3 * Math.sin(performance.now() / 160)} />
-              <span className="text-[12.5px] text-muted">{s}</span>
+        {(["binary", "pixel"] as const).map((variant) => (
+          <div key={variant}>
+            <h2 className="mt-10 mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">Mascot states · {variant}</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+              {STATES.map((s) => (
+                <div key={s} className="flex flex-col items-center gap-3 rounded-[18px] border border-line bg-surface py-5">
+                  <Mascot variant={variant} state={s} size={64} level={() => 0.3 + 0.3 * Math.sin(performance.now() / 160)} />
+                  <div className="flex items-end gap-2">
+                    <Mascot variant={variant} state={s} size={22} />
+                    <Mascot variant={variant} state={s} size={30} />
+                  </div>
+                  <span className="text-[12.5px] text-muted">{s}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
 
         <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-2">
           <div className="min-w-0">
