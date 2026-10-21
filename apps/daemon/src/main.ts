@@ -5,7 +5,7 @@ import * as memory from "./memory.ts";
 import { Store } from "./store.ts";
 import { Runtime } from "./agent/runtime.ts";
 import { Scheduler } from "./scheduler.ts";
-import { closeConnectors, loadConnectors } from "./connectors.ts";
+import { connectors } from "./connectors.ts";
 import { createApp } from "./server.ts";
 import { Artifacts } from "./artifacts.ts";
 
@@ -24,7 +24,8 @@ async function main() {
   runtime.nextRoutineInMs = () => scheduler.msUntilNext();
 
   const stopWatching = memory.watchHome(() => memory.reindex(db));
-  runtime.extraTools = await loadConnectors();
+  runtime.extraTools = () => connectors.tools();
+  void connectors.load(); // slow or offline servers shouldn't hold up startup
   runtime.start();
   scheduler.start();
 
@@ -38,7 +39,7 @@ async function main() {
     scheduler.stop();
     runtime.stop();
     stopWatching();
-    await closeConnectors();
+    await connectors.close();
     server.close();
     db.close();
     process.exit(0);

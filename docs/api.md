@@ -62,6 +62,21 @@ refetch on reconnect.
 - `POST /api/routines/:name/run` → `{turnId}` runs a routine now
 - `PATCH /api/routines/:name` `{enabled}` → `{ok:true}`
 
+## Connectors
+
+- `GET /api/connectors` → `ConnectorsOverview` (connectors with state and tools, presets, secret **names**, where the vault key lives)
+- `POST /api/connectors` `AddConnectorBody` (`{name, preset?, url?, auth?, apiKey?}`) → `ConnectorInfo`. Remote servers only; `apiKey` goes to the vault.
+- `DELETE /api/connectors/:name` → `{ok:true}` (also deletes its OAuth tokens and the key Bits created for it)
+- `PATCH /api/connectors/:name` `{disabled}` → `{ok:true}`
+- `POST /api/connectors/:name/reconnect` → `{ok:true}`
+- `POST /api/connectors/:name/auth` → `{url}`: the provider's sign-in page to open (empty when already signed in)
+- `POST /api/connectors/:name/signout` → `{ok:true}`
+- `PUT /api/secrets/:name` `{value}` / `DELETE /api/secrets/:name` → `{ok:true}`. Write-only: values are never returned.
+- `GET /oauth/callback?code&state` — the OAuth redirect target (not under `/api`; the single-use `state` authenticates it).
+- SSE `{type:"connectors"}` → refetch `GET /api/connectors`.
+
+Requests with an `Origin` other than the daemon or the dev server (plus `BITS_ALLOWED_ORIGINS`) get 403, as do non-loopback `Host` headers when bound to loopback.
+
 ## Voice
 
 - `GET /api/voice/config` → `VoiceConfig` (`stt`/`tts` = `"browser"` means use the Web Speech API in the client).

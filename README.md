@@ -37,14 +37,24 @@ Requires Node 24+ (24.16+ recommended; uses the built-in SQLite) and pnpm. Data 
 
 ## Connect apps (MCP)
 
-Edit `~/.bits/connectors.json` and restart the daemon:
+Open **Connectors** in the sidebar and pick one:
+
+- **Sign in** (Notion, Linear, Sentry, or any MCP server that supports OAuth): Bits registers itself with the server, you sign in on the provider's own page, and the sign-in comes back to `http://127.0.0.1:7077/oauth/callback` on your machine. This is the standard MCP authorization flow: OAuth 2.1 with PKCE (S256), dynamic client registration, single-use `state`, and tokens refreshed automatically.
+- **API key** (GitHub, Composio, or a custom server): paste a key you created with the provider. [Composio](https://composio.dev) is the shortcut to Gmail, Calendar, Slack, Drive and 250+ more apps: make a free account, create an MCP server in its dashboard, then paste the server URL and your API key.
+
+Keys and tokens go into `~/.bits/secrets.enc` (AES-256-GCM), and the encryption key lives in the macOS Keychain or the Linux Secret Service (`~/.bits/secrets.key`, mode 0600, when neither exists; force that with `BITS_SECRETS=file`). The model, the transcript and the HTTP API never see the values; the API only lists key names.
+
+Servers that run on your machine are added by editing `~/.bits/connectors.json` (then restart the daemon). Refer to saved keys as `{{secret:name}}` and to environment variables as `{{env:NAME}}`:
 
 ```json
 { "servers": {
-  "github": { "url": "https://api.githubcopilot.com/mcp/", "headers": { "Authorization": "Bearer <token>" } },
+  "notion": { "url": "https://mcp.notion.com/mcp", "auth": "oauth" },
+  "github": { "url": "https://api.githubcopilot.com/mcp/", "headers": { "Authorization": "Bearer {{secret:github_key}}" } },
   "files":  { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/me/Documents"] }
 } }
 ```
+
+Local servers can't be added through the API, so a web page can never make Bits run a command. The daemon also rejects requests from other sites (`Origin` check) and DNS rebinding (`Host` check); allow extra origins with `BITS_ALLOWED_ORIGINS`.
 
 Tools marked read-only run freely, destructive ones always ask, and everything else is auto-reviewed. Add `"allow"`, `"ask"` or `"deny"` patterns (e.g. `"mcp__github__*"`) to `~/.bits/policy.json`.
 

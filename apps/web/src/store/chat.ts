@@ -27,7 +27,7 @@ export interface TurnState {
   at: number;
 }
 
-export type View = "chat" | "memory" | "artifacts";
+export type View = "chat" | "memory" | "artifacts" | "connectors";
 
 export type Connection = "connecting" | "online" | "offline";
 
