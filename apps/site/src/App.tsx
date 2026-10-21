@@ -35,7 +35,7 @@ const FORM_FIELDS = {
   name: "entry.829985136",
   email: "entry.909276728",
   /** "How can we help" (a Paragraph question). The audience choice is prefixed to it. */
-  help: null as string | null,
+  help: "entry.559417623",
 };
 const AUDIENCES = ["Just me", "Team", "Enterprise"] as const;
 
@@ -633,7 +633,7 @@ function Contact() {
     const body = new URLSearchParams();
     body.set(FORM_FIELDS.name, String(form.get("name") ?? "").trim());
     body.set(FORM_FIELDS.email, String(form.get("email") ?? "").trim());
-    if (FORM_FIELDS.help) body.set(FORM_FIELDS.help, `[${audience}] ${String(form.get("help") ?? "").trim()}`);
+    body.set(FORM_FIELDS.help, `[${audience}] ${String(form.get("help") ?? "").trim()}`);
     setState("sending");
     try {
       // Google Forms doesn't send CORS headers, so the response is opaque; a network failure still throws.
