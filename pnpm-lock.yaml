@@ -18,8 +18,8 @@ importers:
         specifier: 0.2.0
         version: 0.2.0
       '@agentable-ui/lang':
-        specifier: 0.2.1
-        version: 0.2.1
+        specifier: 0.3.0
+        version: 0.3.0
       '@agentable-ui/ui':
         specifier: 0.2.1
         version: 0.2.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -79,11 +79,11 @@ importers:
         specifier: 0.2.0
         version: 0.2.0
       '@agentable-ui/genui':
-        specifier: 0.3.1
-        version: 0.3.1(react@19.3.1)
+        specifier: 0.3.2
+        version: 0.3.2(react@19.3.1)
       '@agentable-ui/lang':
-        specifier: 0.2.1
-        version: 0.2.1
+        specifier: 0.3.0
+        version: 0.3.0
       '@agentable-ui/react':
         specifier: 0.1.1
         version: 0.1.1(react@19.3.1)
@@ -155,13 +155,13 @@ packages:
       react:
         optional: true
 
-  '@agentable-ui/genui@0.3.1':
-    resolution: {integrity: sha512-qYlcqGYc08a0XmhwU+eMhnPoN3O6H5SxMtU8OfvRuabsul2JnDYqLLevULduwmfVhI30epvG5bG+iHXm/sm8sA==}
+  '@agentable-ui/genui@0.3.2':
+    resolution: {integrity: sha512-SwJN10oG9BvWsUsUvtZZS/UV2wgYkJ7YkoHBUWPLBPj4BQjzg4Vng7mtvnY46enkPd2r7fuUl3l7kRqnytiPRA==}
     peerDependencies:
       react: ^18.2.0 || ^19.0.0
 
-  '@agentable-ui/lang@0.2.1':
-    resolution: {integrity: sha512-PSUxcW2O1fYPU2DO5YGap2+pwfxVHU31Brc7xt3P4MJjAzPT0JXaRNxpBfz91l4i2B8c0P0FugeMRQz2QPRGuw==}
+  '@agentable-ui/lang@0.3.0':
+    resolution: {integrity: sha512-gHegR0QAESzjy6YNv7sVtcp35EpVrTi8v6w42k3xGOtP5HfL6NcqqcW6/0wQ9GOH0d8wqdQqKVtLv/BenME2lQ==}
 
   '@agentable-ui/react@0.1.1':
     resolution: {integrity: sha512-WrlmciUgkxJuWpl8WXUj+3/pjy4U6iTK1/uuNih/XhdJUWKOvLMzjcvz5QY4Kck5FuDOA7lo6bYm0YLSx/Gr5Q==}
@@ -1693,14 +1693,14 @@ snapshots:
     optionalDependencies:
       react: 19.3.1
 
-  '@agentable-ui/genui@0.3.1(react@19.3.1)':
+  '@agentable-ui/genui@0.3.2(react@19.3.1)':
     dependencies:
       '@agentable-ui/core': 0.2.0
-      '@agentable-ui/lang': 0.2.1
+      '@agentable-ui/lang': 0.3.0
       '@agentable-ui/react': 0.1.1(react@19.3.1)
       react: 19.3.1
 
-  '@agentable-ui/lang@0.2.1':
+  '@agentable-ui/lang@0.3.0':
     dependencies:
       '@agentable-ui/core': 0.2.0
 

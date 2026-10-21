@@ -84,7 +84,6 @@ export function langGuide() {
       "Write programs as the tool's `program` argument — never in your text reply.",
       "In artifacts, read saved data with $data.* and change it ONLY with @Tool(\"<action name>\", {…}) calling one of the artifact's declared actions. $ui.* is for local view state (drafts, selection, tabs).",
       "In inline `present` views, buttons that should talk back to you use @Say(\"…\"), which sends that text as the user's next message.",
-      "Events and props are always arguments of the component call, e.g. `name = TextInput(\"Name\", value: $ui.name, change: @Set($ui.name, $event))`. Never write separate `node.prop = …` lines; they don't parse.",
     ],
   });
 }

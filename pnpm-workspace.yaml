@@ -15,8 +15,8 @@ minimumReleaseAgeExclude:
   - vite@8.3.5
   - electron@45.0.0
   - '@agentable-ui/core@0.2.0'
-  - '@agentable-ui/genui@0.3.1'
-  - '@agentable-ui/lang@0.2.1'
+  - '@agentable-ui/genui@0.3.1 || 0.3.2'
+  - '@agentable-ui/lang@0.2.1 || 0.3.0'
   - '@agentable-ui/react@0.1.1'
   - '@agentable-ui/ui@0.2.1'
   - '@agentable-ui/devtools@0.1.1'
