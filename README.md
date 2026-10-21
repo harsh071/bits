@@ -17,7 +17,7 @@ A small always-on daemon does the work and remembers everything in plain files. 
 ```bash
 cp .env.example .env          # add ANTHROPIC_API_KEY (or OPENAI_API_KEY, or set BITS_MODEL=local:<model>)
 pnpm install
-pnpm dev                      # daemon on :7077, web app on :5173
+pnpm dev                      # daemon on :7077, web app on :5320
 pnpm dev:desktop              # optional: tray icon + ⌥Space overlay
 pnpm service:install          # optional: keep the daemon running at login (launchd / systemd)
 ```

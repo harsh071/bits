@@ -180,7 +180,7 @@ export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, 
     if (!file.startsWith(dist) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(dist, "index.html");
     if (!fs.existsSync(file)) {
       return c.html(
-        `<p style="font-family:system-ui;padding:2rem">Bits daemon is running. Build the web app with <code>pnpm --filter @bits/web build</code>, or run <code>pnpm dev</code> and open <a href="http://localhost:5173">localhost:5173</a>.</p>`,
+        `<p style="font-family:system-ui;padding:2rem">Bits daemon is running. Build the web app with <code>pnpm --filter @bits/web build</code>, or run <code>pnpm dev</code> and open <a href="http://localhost:5180">localhost:5180</a>.</p>`,
       );
     }
     const type = MIME[path.extname(file)] ?? "application/octet-stream";

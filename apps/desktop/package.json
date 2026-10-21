@@ -6,7 +6,7 @@
   "main": "src/main.js",
   "description": "Bits desktop shell: tray, global hotkey quick-ask overlay, notifications. The agent itself runs in the daemon.",
   "scripts": {
-    "dev": "BITS_WEB_URL=http://localhost:5173 electron .",
+    "dev": "BITS_WEB_URL=http://localhost:5320 electron .",
     "start": "electron .",
     "typecheck": "echo 'desktop: plain JS, nothing to typecheck'"
   },

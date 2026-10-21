@@ -1,7 +1,7 @@
 # Bits daemon API (v0)
 
 Base URL: `http://127.0.0.1:7077` (env `BITS_PORT`). All types live in `packages/protocol/src/index.ts`.
-In dev, the web app (Vite, port 5173) proxies `/api` to the daemon.
+In dev, the web app (Vite, port 5320) proxies `/api` to the daemon.
 
 Auth: if `BITS_TOKEN` is set, send `Authorization: Bearer <token>` (or `?token=` for SSE). Unset on localhost by default.
 

@@ -7,7 +7,8 @@ const DAEMON = process.env.BITS_DAEMON_URL ?? `http://127.0.0.1:${process.env.BI
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    port: 5173,
+    port: 5320,
+    strictPort: true,
     proxy: {
       "/api": {
         target: DAEMON,
