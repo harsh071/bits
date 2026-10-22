@@ -14,6 +14,8 @@ import type {
   Turn,
   VoiceConfig,
 } from "@bits/protocol";
+import { DEMO } from "./lib/demo";
+import { demoApi } from "@bits-demo";
 
 /** Optional bearer token (BITS_TOKEN). Picked up from `?token=` once, then remembered. */
 function readToken(): string | null {
@@ -25,7 +27,8 @@ function readToken(): string | null {
     return null;
   }
 }
-export const token = readToken();
+// The demo never reads or sends a token.
+export const token = DEMO ? null : readToken();
 
 export class ApiError extends Error {
   status: number;
@@ -51,6 +54,7 @@ function report(online: boolean) {
 }
 
 async function request<T>(method: string, path: string, body?: unknown, init?: RequestInit): Promise<T> {
+  if (DEMO) throw new ApiError(0, "The demo has no daemon"); // never reached: demo calls go to demoApi
   const headers: Record<string, string> = {};
   if (token) headers.authorization = `Bearer ${token}`;
   let payload: BodyInit | undefined;
@@ -96,7 +100,7 @@ export interface MessagesPage {
   turn: Turn | null;
 }
 
-export const api = {
+const liveApi = {
   health: () => request<{ ok: true; version: string; model: string }>("GET", "/health"),
 
   conversations: () => request<Conversation[]>("GET", "/conversations"),
@@ -153,6 +157,11 @@ export const api = {
   },
   speak: (text: string, signal?: AbortSignal) => request<Blob>("POST", "/voice/speak", { text }, { signal }),
 };
+
+export type Api = typeof liveApi;
+
+/** The daemon API, or an in-memory stand-in when built with VITE_BITS_DEMO=1. */
+export const api: Api = import.meta.env.VITE_BITS_DEMO === "1" ? demoApi : liveApi;
 
 export function eventsUrl() {
   return token ? `/api/events?token=${encodeURIComponent(token)}` : "/api/events";

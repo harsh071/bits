@@ -135,19 +135,32 @@ ipcMain.on("bits:resize-overlay", (_e, height) => {
 
 // ---------- tray ----------
 
-// A tiny template icon drawn in code: a rounded blob with two pill eyes (the Bits mascot).
+// A tiny template icon drawn in code: the Bits mascot, a rounded square with "0 0" eyes.
 function trayIcon() {
   const size = 36; // @2x for an 18pt menu-bar icon
   const buf = Buffer.alloc(size * size * 4);
   const c = size / 2;
+  const half = 15; // body half-width
+  const radius = 9;
+  const inBody = (px, py) => {
+    const qx = Math.max(Math.abs(px - c) - (half - radius), 0);
+    const qy = Math.max(Math.abs(py - c) - (half - radius), 0);
+    return qx * qx + qy * qy <= radius * radius;
+  };
+  // A "0" eye: the outline of a pill, cut out of the body.
+  const inZero = (px, py, ex) => {
+    const rx = 3.6;
+    const ry = 5.6;
+    const dx = Math.abs(px - ex);
+    const dy = Math.max(Math.abs(py - c) - (ry - rx), 0);
+    const d = Math.sqrt(dx * dx + dy * dy);
+    return Math.abs(d - rx) <= 1.3;
+  };
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      const dx = (x - c + 0.5) / 14;
-      const dy = (y - c + 0.5) / 14;
-      const wobble = 1 + 0.06 * Math.sin(Math.atan2(dy, dx) * 5);
-      const inBlob = Math.sqrt(dx * dx + dy * dy) < wobble;
-      const inEye = (cx) => Math.abs(x - cx) <= 1.6 && y >= c - 5 && y <= c + 2;
-      const on = inBlob && !inEye(c - 5) && !inEye(c + 4);
+      const px = x + 0.5;
+      const py = y + 0.5;
+      const on = inBody(px, py) && !inZero(px, py, c - 6) && !inZero(px, py, c + 6);
       const i = (y * size + x) * 4;
       buf[i + 3] = on ? 255 : 0; // BGRA, black with alpha → template image
     }

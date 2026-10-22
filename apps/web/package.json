@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:demo": "VITE_BITS_DEMO=1 vite build --base=/demo/ --outDir dist-demo",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p ."
   },
