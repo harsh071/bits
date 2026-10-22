@@ -246,6 +246,10 @@ function Hero() {
             <ArrowUpRight size={17} aria-hidden />
           </ButtonLink>
         </Reveal>
+
+        <Reveal delay={0.25} className="mt-7">
+          <ProductHuntBadge />
+        </Reveal>
       </Wrap>
 
       <Wrap className="relative pb-24 sm:pb-32">
@@ -254,6 +258,24 @@ function Hero() {
         </Reveal>
       </Wrap>
     </section>
+  );
+}
+
+const PH_LINK =
+  "https://www.producthunt.com/products/bits-4?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-bits-8153a1e0-9034-474e-ad02-243bd8abcfc9";
+const PH_BADGE = "https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1288430&theme=light&t=1792671204690";
+
+/** Product Hunt upvote badge. */
+function ProductHuntBadge() {
+  return (
+    <a href={PH_LINK} target="_blank" rel="noopener noreferrer" className="inline-block transition-transform hover:-translate-y-0.5">
+      <img
+        src={PH_BADGE}
+        alt="Bits - An open-source personal agent that gets you things done | Product Hunt"
+        width={250}
+        height={54}
+      />
+    </a>
   );
 }
 
