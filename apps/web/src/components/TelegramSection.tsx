@@ -4,6 +4,7 @@ import type { TelegramStatus } from "@bits/protocol";
 import { api } from "../api";
 import { onReconnect, onServerEvent } from "../store/sync";
 import { Section } from "./MemoryView";
+import { MorningBrief } from "./MorningBrief";
 
 const inputCls =
   "w-full rounded-[12px] border border-line bg-surface-2 px-3 py-2 text-[14px] text-ink outline-none transition-colors placeholder:text-faint focus:border-accent/50 focus:bg-surface";
@@ -136,6 +137,9 @@ export function TelegramSection() {
           >
             Unpair
           </button>
+          <div className="mt-2 w-full border-t border-line pt-3">
+            <MorningBrief label="Morning brief here" />
+          </div>
         </div>
       )}
 

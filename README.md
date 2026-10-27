@@ -63,7 +63,7 @@ Tools marked read-only run freely, destructive ones always ask, and everything e
 Under **Connectors → Telegram**: make a bot with [@BotFather](https://t.me/BotFather) (`/newbot`), paste its token, then open the pairing link on your phone and tap Start.
 
 - Messages and voice notes (with `OPENAI_API_KEY`) go to your Home conversation, the same Bits as on your computer. `/stop` stops the current turn.
-- Replies come back for turns you started from Telegram and for routines, so a 7am "morning brief" routine lands on your phone.
+- Replies come back for turns you started from Telegram and for routines. Pick a time for the **morning brief** right there (or under What Bits knows → Routines) and it lands on your phone: the one thing that matters today, then a few bullets from your calendar, email, open tasks and weather. It's a normal routine file (`~/.bits/routines/morning-brief.md`), so edit the prompt to taste.
 - Anything that needs your OK arrives with **Approve**, **Deny** and **Always allow** buttons.
 - The daemon long-polls Telegram, so nothing on the internet connects to your machine. Only the chat that opened the pairing link is answered; every other chat is ignored. The token lives in the vault like any other key.
 

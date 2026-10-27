@@ -95,6 +95,12 @@ export function openDb(file: string): DB {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const db = new DatabaseSync(file);
   db.exec(SCHEMA);
+  // Columns added after the first release (ALTER fails harmlessly when the column is already there).
+  for (const sql of ["ALTER TABLE routine_state ADD COLUMN schedule TEXT"]) {
+    try {
+      db.exec(sql);
+    } catch {}
+  }
   return db;
 }
 
