@@ -11,6 +11,7 @@ import type {
   Message,
   SendMessageBody,
   SendMessageResult,
+  TelegramStatus,
   Turn,
   VoiceConfig,
 } from "@bits/protocol";
@@ -143,6 +144,11 @@ export const api = {
   signOut: (name: string) => request<{ ok: true }>("POST", `/connectors/${encodeURIComponent(name)}/signout`),
   setSecret: (name: string, value: string) => request<{ ok: true }>("PUT", `/secrets/${encodeURIComponent(name)}`, { value }),
   deleteSecret: (name: string) => request<{ ok: true }>("DELETE", `/secrets/${encodeURIComponent(name)}`),
+
+  telegram: () => request<TelegramStatus>("GET", "/channels/telegram"),
+  setupTelegram: (token: string) => request<TelegramStatus>("PUT", "/channels/telegram", { token }),
+  unpairTelegram: () => request<{ ok: true }>("POST", "/channels/telegram/unpair"),
+  removeTelegram: () => request<{ ok: true }>("DELETE", "/channels/telegram"),
 
   voiceConfig: () => request<VoiceConfig>("GET", "/voice/config"),
   transcribe: (audio: Blob) => {

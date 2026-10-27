@@ -7,6 +7,7 @@ import { useConnectors } from "../store/connectors";
 import { IconButton } from "./IconButton";
 import { Mascot } from "./Mascot";
 import { Section, Sheet, Switch } from "./MemoryView";
+import { TelegramSection } from "./TelegramSection";
 
 const STORE_LABEL = { keychain: "macOS Keychain", "secret-service": "your system keyring", file: "a local key file" } as const;
 
@@ -352,6 +353,8 @@ export function ConnectorsView({ onMenu }: { onMenu: () => void }) {
                 Servers that run on this machine (<code className="font-mono">npx …</code>) are added by editing <code className="font-mono">{data.configPath}</code>, so a web page can never install one.
               </p>
             </Section>
+
+            <TelegramSection />
 
             <Section icon={<ShieldCheck size={16} />} title="Keys" hint={`Encrypted with a key held in ${STORE_LABEL[data.keyStore]}. Values can't be read back.`}>
               <Keys names={data.secrets} />
