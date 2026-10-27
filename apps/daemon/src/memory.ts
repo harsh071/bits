@@ -44,14 +44,33 @@ description: Use this when the user asks to research, compare, or evaluate optio
 5. Save any new durable preference you learned with memory_remember.
 `;
 
+// Written as an instruction to Bits. It may be read on a phone (Telegram), so plain text, short, no views.
+export const MORNING_BRIEF_PROMPT = `Write my morning brief. I'll probably read it on my phone, so keep it short: plain text, no tables, no views or artifacts.
+
+Gather what you can, quietly and read-only (don't send, buy, book or change anything):
+- Today's calendar and anything in my email that needs me, if a calendar or email connector is connected.
+- Open tasks, commitments and follow-ups from my memory and our recent conversations, especially anything due today or overdue.
+- Trackers or lists you made for me (artifact_list) with something due.
+- Weather where I am, if you know where that is.
+- One or two news items only if they clearly match interests in my profile.
+
+Then write it:
+- First line: the one thing that matters most today.
+- Then at most 6 short bullets, most important first. Skip any category with nothing worth saying.
+- End with one offer of something you could do for me today.
+If there's genuinely nothing, say so in one line. Don't pad.`;
+
+/** The sample's first prompt (it asked for a card, which a phone can't show). Briefs still using it get upgraded. */
+export const OLD_MORNING_BRIEF_PROMPT = `Good morning routine. Check my profile and recent memory log, then give me a short brief for today:
+weather where I live, anything I said was due today or this week, and one thing worth reading.
+Render it as a compact card with a checklist. Keep it under 120 words.`;
+
 const SAMPLE_ROUTINE = `---
 schedule: "0 8 * * 1-5"
 enabled: false
-description: Weekday morning brief
+description: Morning brief
 ---
-Good morning routine. Check my profile and recent memory log, then give me a short brief for today:
-weather where I live, anything I said was due today or this week, and one thing worth reading.
-Render it as a compact card with a checklist. Keep it under 120 words.
+${MORNING_BRIEF_PROMPT}
 `;
 
 export function initHome() {

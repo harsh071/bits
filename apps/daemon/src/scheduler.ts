@@ -26,7 +26,7 @@ export class Scheduler {
 
   private state(name: string) {
     return this.store.db.prepare("SELECT * FROM routine_state WHERE name = ?").get(name) as
-      | { name: string; last_run_at: number | null; next_run_at: number | null }
+      | { name: string; last_run_at: number | null; next_run_at: number | null; schedule: string | null }
       | undefined;
   }
 
@@ -58,8 +58,18 @@ export class Scheduler {
       if (!s) {
         // First sighting: schedule from now (don't fire retroactively).
         this.store.db
-          .prepare("INSERT INTO routine_state (name, next_run_at) VALUES (?, ?)")
-          .run(r.name, nextRun(r.schedule, now));
+          .prepare("INSERT INTO routine_state (name, next_run_at, schedule) VALUES (?, ?, ?)")
+          .run(r.name, nextRun(r.schedule, now), r.schedule);
+        continue;
+      }
+      if (s.schedule === null) {
+        // Row from before schedules were recorded: keep its plan.
+        this.store.db.prepare("UPDATE routine_state SET schedule = ? WHERE name = ?").run(r.schedule, r.name);
+      } else if (s.schedule !== r.schedule) {
+        // The file's schedule changed (edited by hand, by Bits or a preset): re-plan from now.
+        this.store.db
+          .prepare("UPDATE routine_state SET next_run_at = ?, schedule = ? WHERE name = ?")
+          .run(nextRun(r.schedule, now), r.schedule, r.name);
         continue;
       }
       if (!r.enabled) continue;

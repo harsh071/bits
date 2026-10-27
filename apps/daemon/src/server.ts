@@ -11,6 +11,7 @@ import type { Runtime } from "./agent/runtime.ts";
 import type { Scheduler } from "./scheduler.ts";
 import { connectors } from "./connectors.ts";
 import { localOnly } from "./guard.ts";
+import { saveMorningBrief } from "./presets.ts";
 import { speechToText, textToSpeech } from "./voice.ts";
 import type { Artifacts } from "./artifacts.ts";
 import type { Telegram } from "./channels/telegram.ts";
@@ -136,6 +137,12 @@ export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, 
   app.get("/api/skills/:name", (c) => {
     const s = memory.readSkill(c.req.param("name"));
     return s ? c.json({ name: s.name, description: s.description, content: s.body }) : c.json({ error: "not found" }, 404);
+  });
+  app.post("/api/routines/presets/morning-brief", async (c) => {
+    const { time, days } = await c.req.json();
+    const saved = saveMorningBrief(String(time ?? ""), days);
+    scheduler.tick();
+    return c.json(scheduler.overview().find((r) => r.name === saved.name));
   });
   app.post("/api/routines/:name/run", (c) => c.json({ turnId: scheduler.runNow(c.req.param("name")) }));
   app.patch("/api/routines/:name", async (c) => {

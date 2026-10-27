@@ -242,6 +242,12 @@ export interface MemoryOverview {
   routines: { name: string; schedule: string; enabled: boolean; nextRunAt: number | null; lastRunAt: number | null; prompt: string }[];
 }
 
+/** POST /api/routines/presets/morning-brief: adds (or reschedules) the morning brief routine. */
+export interface MorningBriefBody {
+  time: string; // "07:30", local time
+  days: "weekdays" | "daily";
+}
+
 export interface VoiceConfig {
   stt: "openai" | "browser";
   tts: "openai" | "cartesia" | "browser";

@@ -8,6 +8,7 @@ import type {
   ArtifactMeta,
   Conversation,
   MemoryOverview,
+  MorningBriefBody,
   Message,
   SendMessageBody,
   SendMessageResult,
@@ -121,6 +122,7 @@ export const api = {
   skill: (name: string) =>
     request<{ name: string; description: string; content: string }>("GET", `/skills/${encodeURIComponent(name)}`),
   runRoutine: (name: string) => request<{ turnId: string }>("POST", `/routines/${encodeURIComponent(name)}/run`),
+  addMorningBrief: (body: MorningBriefBody) => request<unknown>("POST", "/routines/presets/morning-brief", body),
   setRoutine: (name: string, enabled: boolean) =>
     request<{ ok: true }>("PATCH", `/routines/${encodeURIComponent(name)}`, { enabled }),
 

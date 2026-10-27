@@ -7,6 +7,7 @@ import { humanCron, relTime } from "../lib/text";
 import { Markdown } from "./Markdown";
 import { IconButton } from "./IconButton";
 import { Mascot } from "./Mascot";
+import { MorningBrief } from "./MorningBrief";
 
 export function Section({ icon, title, hint, children, action }: { icon: ReactNode; title: string; hint?: string; children: ReactNode; action?: ReactNode }) {
   return (
@@ -190,8 +191,13 @@ export function MemoryView({ onMenu }: { onMenu: () => void }) {
                 <ProfileEditor value={data.profile} />
               </Section>
               <Section icon={<AlarmClock size={16} />} title="Routines" hint="Things Bits does on its own schedule">
+                {!data.routines.some((r) => r.name === "morning-brief") && (
+                  <div className="mb-3">
+                    <MorningBrief label="Morning brief" />
+                  </div>
+                )}
                 {data.routines.length === 0 ? (
-                  <p className="text-[13.5px] text-muted">No routines yet. Try “Every weekday at 8am, give me a morning brief.”</p>
+                  <p className="text-[13.5px] text-muted">Or just ask: “Every Friday at 5pm, sum up my week.”</p>
                 ) : (
                   <ul className="flex flex-col">
                     {data.routines.map((r, i) => (
@@ -206,6 +212,11 @@ export function MemoryView({ onMenu }: { onMenu: () => void }) {
                             {r.enabled && r.nextRunAt ? `Next ${relTime(r.nextRunAt)}` : r.enabled ? "Not scheduled" : "Paused"}
                             {r.lastRunAt ? ` · last ran ${relTime(r.lastRunAt)}` : ""}
                           </div>
+                          {r.name === "morning-brief" && (
+                            <div className="mt-2">
+                              <MorningBrief />
+                            </div>
+                          )}
                         </div>
                         <button
                           type="button"
