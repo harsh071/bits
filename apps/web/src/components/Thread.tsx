@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion } from "motion/react";
-import { CircleAlert, Mic, RotateCcw, Sparkles, X, Zap } from "lucide-react";
+import { CircleAlert, Mic, RotateCcw, Send, Sparkles, X, Zap } from "lucide-react";
 import type { Block } from "../lib/blocks";
 import { GenUIBlock } from "../genui";
 import { Markdown } from "./Markdown";
@@ -51,11 +51,13 @@ function UserBubble({ block, onRetry, onDiscard }: { block: Extract<Block, { kin
       >
         <div className="whitespace-pre-wrap break-words">{block.text}</div>
       </div>
-      {(block.source === "voice" || block.steering) && !failed && (
+      {(block.source === "voice" || block.source === "telegram" || block.steering) && !failed && (
         <div className="flex items-center gap-1 pr-1 text-[11.5px] text-faint">
           {block.source === "voice" && <Mic size={11} />}
+          {block.source === "telegram" && <Send size={11} />}
           {block.steering && <span>Sent while Bits was working</span>}
           {block.source === "voice" && !block.steering && <span>Voice</span>}
+          {block.source === "telegram" && !block.steering && <span>From Telegram</span>}
         </div>
       )}
       {failed && (

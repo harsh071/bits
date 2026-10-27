@@ -145,10 +145,10 @@ export const secrets = {
     const keep = Object.fromEntries(Object.entries(all).filter(([k]) => !k.startsWith(prefix)));
     if (Object.keys(keep).length !== Object.keys(all).length) save(keep);
   },
-  /** Names only, never values. OAuth bookkeeping (oauth:*) is hidden. */
+  /** Names only, never values. OAuth bookkeeping (oauth:*) and channel tokens (channel:*) are hidden. */
   names(): string[] {
     return Object.keys(load())
-      .filter((k) => !k.startsWith("oauth:"))
+      .filter((k) => !k.startsWith("oauth:") && !k.startsWith("channel:"))
       .sort();
   },
   store(): KeyStore {

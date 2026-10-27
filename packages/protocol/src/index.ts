@@ -34,7 +34,7 @@ export interface Message {
   turnId?: string | null;
   createdAt: number;
   meta?: {
-    source?: "app" | "voice" | "routine" | "webhook" | "system" | "artifact";
+    source?: "app" | "voice" | "telegram" | "routine" | "webhook" | "system" | "artifact";
     artifact?: string;
     routine?: string;
     steering?: boolean; // arrived while a turn was running
@@ -105,6 +105,7 @@ export type ServerEvent =
   | { type: "artifact"; id: string; version: number; dataVersion: number } // refetch GET /api/artifacts/:id
   | { type: "artifacts" } // list changed
   | { type: "connectors" } // connector list or status changed: refetch GET /api/connectors
+  | { type: "channels" } // a channel (Telegram) was set up, paired or removed: refetch GET /api/channels/telegram
   | { type: "ping" };
 
 // ---------- Generative UI ----------
@@ -223,7 +224,7 @@ export interface ArtifactActivity {
 export interface SendMessageBody {
   id: string; // client-generated; server drops duplicates
   text: string;
-  source?: "app" | "voice";
+  source?: "app" | "voice" | "telegram";
 }
 
 export interface SendMessageResult {
@@ -306,4 +307,21 @@ export interface AddConnectorBody {
   auth?: ConnectorAuth;
   /** For key auth: the API key. Stored in the vault, never in connectors.json. */
   apiKey?: string;
+}
+
+// ----- channels (reach Bits away from this machine) -----
+
+/**
+ * Telegram: a bot you make with @BotFather. The daemon long-polls Telegram (no public URL needed),
+ * answers only the one chat that paired with it, and sends back replies, routine results and approvals.
+ */
+export interface TelegramStatus {
+  configured: boolean;
+  /** The bot's @username, once the token checked out. */
+  bot: string | null;
+  /** Who it's paired with. Only this chat can talk to Bits. */
+  paired: { name: string } | null;
+  /** While unpaired: open this link on your phone (t.me/<bot>?start=<code>) to pair. */
+  pairUrl: string | null;
+  error: string | null;
 }

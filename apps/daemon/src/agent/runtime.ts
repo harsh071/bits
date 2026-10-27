@@ -80,7 +80,7 @@ export class Runtime {
       conversationId,
       role: "user",
       parts: [{ type: "text", text }],
-      meta: { source: body.source === "voice" ? "voice" : "app", ...(active ? { steering: true } : {}) },
+      meta: { source: body.source === "voice" || body.source === "telegram" ? body.source : "app", ...(active ? { steering: true } : {}) },
     });
     if (duplicate) return { message, duplicate, turnId: active?.id ?? null, steering: false };
 

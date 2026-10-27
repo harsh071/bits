@@ -13,6 +13,7 @@ import { connectors } from "./connectors.ts";
 import { localOnly } from "./guard.ts";
 import { speechToText, textToSpeech } from "./voice.ts";
 import type { Artifacts } from "./artifacts.ts";
+import type { Telegram } from "./channels/telegram.ts";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -26,7 +27,7 @@ const MIME: Record<string, string> = {
   ".webmanifest": "application/manifest+json",
 };
 
-export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, artifacts: Artifacts) {
+export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, artifacts: Artifacts, telegram?: Telegram) {
   const app = new Hono();
 
   app.onError((err, c) => {
@@ -188,6 +189,23 @@ export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, 
   });
   app.delete("/api/secrets/:name", (c) => {
     connectors.deleteSecret(c.req.param("name"));
+    return c.json({ ok: true });
+  });
+
+  // ----- channels -----
+  app.get("/api/channels/telegram", (c) => c.json(telegram?.status() ?? { configured: false, bot: null, paired: null, pairUrl: null, error: null }));
+  // Write-only like secrets: the token goes in, only the bot's name comes out.
+  app.put("/api/channels/telegram", async (c) => {
+    if (!telegram) return c.json({ error: "channels are off" }, 404);
+    const { token } = await c.req.json();
+    return c.json(await telegram.setup(String(token ?? "")));
+  });
+  app.post("/api/channels/telegram/unpair", (c) => {
+    telegram?.unpair();
+    return c.json({ ok: true });
+  });
+  app.delete("/api/channels/telegram", async (c) => {
+    await telegram?.remove();
     return c.json({ ok: true });
   });
 
