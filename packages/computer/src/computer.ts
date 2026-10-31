@@ -13,6 +13,7 @@ import { CdpConnection, attach, type PageSession } from "./cdp.ts";
 import { ensureChrome } from "./chrome.ts";
 import { formatSnapshot, type RawSnapshot } from "./format.ts";
 import { keyEvents } from "./keys.ts";
+import { LOG_VERSION, redactUrl, type Decision, type LogEntry, type LogSink } from "./log.ts";
 
 const WORLD_SRC = readFileSync(new URL("./world.js", import.meta.url), "utf8");
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -60,7 +61,9 @@ export interface ComputerOptions {
   /** Pause after showing the pointer, before pressing, so a person can see it coming. Default 0. */
   leadMs?: number;
   /** Decide on a write the agent's action is about to send. Without it, writes pass. */
-  onWrite?: (w: WriteRequest) => Promise<WriteDecision>;
+  onWrite?: (w: WriteRequest) => Promise<WriteDecision | Decision>;
+  /** Receives the action log: every step and what it caused. See log.ts. */
+  onLog?: LogSink;
   /** How long the page must be still to count as settled. Default 120 ms. */
   quietMs?: number;
   /** Longest wait for a page to settle after a step. Default 3000 ms. */
@@ -119,6 +122,9 @@ export class Computer {
   #acting = false;
   #activeUntil = 0;
   #observed: string[] | null = null;
+  #actId = "";
+  #stepIndex = 0;
+  #lastTarget: { role: string; name: string; secret?: boolean } | undefined;
 
   private constructor(o: ComputerOptions, conn: CdpConnection) {
     this.#o = o;
@@ -178,7 +184,14 @@ export class Computer {
     session.on("Network.requestWillBeSent", ({ requestId, request, type }) => {
       if (type === "WebSocket" || type === "EventSource") return;
       tab.inflight.set(requestId, Date.now());
-      if (!this.#o.onWrite && WRITE.test(request.method) && type !== "Ping") this.#note(`sent ${request.method} ${short(request.url)}`);
+      if (!this.#o.onWrite && WRITE.test(request.method) && type !== "Ping" && this.#isActive())
+        this.#effect(`sent ${request.method} ${short(request.url)}`, {
+          type: "write",
+          method: request.method,
+          url: redactUrl(request.url),
+          outcome: "sent",
+          bodyBytes: request.postData?.length,
+        });
     });
     const done = ({ requestId }: { requestId: string }) => tab.inflight.delete(requestId);
     session.on("Network.loadingFinished", done);
@@ -201,7 +214,7 @@ export class Computer {
     // A click that opened a new tab: follow it, like a person would.
     if (t.type !== "page" || !this.#isActive() || t.openerId !== this.#tab?.session.targetId) return;
     this.#switching = this.#useTarget(t.targetId)
-      .then(() => this.#note("opened a new tab (now using it)"))
+      .then(() => this.#effect("opened a new tab (now using it)", { type: "new-tab", url: redactUrl(t.url) }))
       .catch(() => {})
       .finally(() => (this.#switching = null));
   }
@@ -318,6 +331,19 @@ export class Computer {
     if (this.#observed && this.#observed.at(-1) !== fact) this.#observed.push(fact);
   }
 
+  #log(e: LogEntry) {
+    if (!this.#o.onLog || !this.#actId) return;
+    try {
+      this.#o.onLog({ v: LOG_VERSION, ...e });
+    } catch {} // logging must never break acting
+  }
+
+  /** Something an action caused: told to the model, and written to the log against the step that caused it. */
+  #effect(fact: string, e: Omit<Extract<LogEntry, { kind: "effect" }>, "kind" | "act" | "step" | "at" | "late">) {
+    this.#note(fact);
+    this.#log({ kind: "effect", act: this.#actId, step: this.#stepIndex, at: new Date().toISOString(), ...e, ...(this.#acting ? {} : { late: true }) });
+  }
+
   async #onPaused(tab: Tab, p: { requestId: string; request: { method: string; url: string; postData?: string }; resourceType: string }) {
     const { requestId, request, resourceType } = p;
     const method = request.method.toUpperCase();
@@ -328,17 +354,25 @@ export class Computer {
     }
     const label = `${method} ${short(request.url)}`;
     this.#note(`held ${label} for review`);
-    let decision: WriteDecision = "deny";
+    let d: Decision = { decision: "deny", reason: "no decision" };
     try {
-      decision = await this.#o.onWrite({ method, url: request.url, body: request.postData?.slice(0, 2000), resourceType, pageUrl: tab.url });
-    } catch {}
-    if (decision === "allow") {
-      this.#note(`sent ${label}`);
-      await tab.session.send("Fetch.continueRequest", { requestId }).catch(() => {});
-    } else {
-      this.#note(`blocked ${label}`);
-      await tab.session.send("Fetch.failRequest", { requestId, errorReason: "BlockedByClient" }).catch(() => {});
+      const r = await this.#o.onWrite({ method, url: request.url, body: request.postData?.slice(0, 2000), resourceType, pageUrl: tab.url });
+      d = typeof r === "string" ? { decision: r } : r;
+    } catch (e) {
+      d = { decision: "deny", reason: `review failed: ${e instanceof Error ? e.message : e}` };
     }
+    const allowed = d.decision === "allow";
+    this.#effect(`${allowed ? "sent" : "blocked"} ${label}`, {
+      type: "write",
+      method,
+      url: redactUrl(request.url),
+      outcome: allowed ? "allowed" : "blocked",
+      by: d.by,
+      reason: d.reason,
+      bodyBytes: request.postData?.length,
+    });
+    if (allowed) await tab.session.send("Fetch.continueRequest", { requestId }).catch(() => {});
+    else await tab.session.send("Fetch.failRequest", { requestId, errorReason: "BlockedByClient" }).catch(() => {});
   }
 
   async #settle(since: number): Promise<"settled" | "timeout" | "dialog"> {
@@ -366,7 +400,10 @@ export class Computer {
   }
 
   async #target(ref: number, label: string, phase: Pointer["phase"]) {
-    const t = await this.#world<{ x: number; y: number; w: number; h: number; error?: string; cover?: string }>(`__bits.target(${ref})`);
+    const t = await this.#world<{ x: number; y: number; w: number; h: number; error?: string; cover?: string; role?: string; name?: string; secret?: boolean }>(
+      `__bits.target(${ref})`,
+    );
+    if (t.role !== undefined) this.#lastTarget = { role: t.role, name: t.name ?? "", secret: t.secret };
     if (t.error === "gone") throw new Error(`[${ref}] is no longer on the page (it changed). Use the new snapshot.`);
     if (t.error === "hidden") throw new Error(`[${ref}] is hidden right now.`);
     if (t.error === "covered") throw new Error(`[${ref}] is covered by ${t.cover}. Close or move that first.`);
@@ -452,37 +489,49 @@ export class Computer {
     throw new Error(`Unknown step ${JSON.stringify(s)}`);
   }
 
-  /** Run steps in order; stop at the first failure. Returns what was observed and a fresh snapshot. */
-  async act(steps: Step[]): Promise<ActResult> {
+  /**
+   * Run steps in order; stop at the first failure. Returns what was observed and a fresh snapshot.
+   * `meta.task` (the user's request) and `meta.turn` are written to the action log.
+   */
+  async act(steps: Step[], meta: { task?: string; turn?: string } = {}): Promise<ActResult> {
     const t0 = performance.now();
     const observed: string[] = [];
     this.#observed = observed;
     this.#acting = true;
+    this.#actId = `a_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     const startUrl = this.#tab.url;
+    this.#log({ kind: "act", act: this.#actId, at: new Date().toISOString(), url: redactUrl(startUrl), steps: steps.length, ...meta });
     let done = 0;
     let error: string | undefined;
     try {
-      for (const s of steps) {
+      for (const [i, s] of steps.entries()) {
         if (this.#switching) await this.#switching;
+        this.#stepIndex = i;
+        this.#lastTarget = undefined;
         const since = Date.now();
+        const urlBefore = this.#tab.url;
+        let stepError: string | undefined;
         try {
           await this.#step(s);
         } catch (e) {
-          if (!(e instanceof DialogOpen)) {
-            error = `Step ${done + 1} ${JSON.stringify(s)} failed: ${e instanceof Error ? e.message : String(e)}`;
-            break;
-          }
+          if (!(e instanceof DialogOpen)) stepError = e instanceof Error ? e.message : String(e);
+        }
+        this.#logStep(s, i, since, stepError);
+        if (stepError) {
+          error = `Step ${i + 1} ${JSON.stringify(s)} failed: ${stepError}`;
+          break;
         }
         const settled = await this.#settle(since);
         done++;
+        if (this.#tab.url !== urlBefore) this.#log({ kind: "effect", act: this.#actId, step: i, at: new Date().toISOString(), type: "navigate", url: redactUrl(this.#tab.url) });
         if (settled === "dialog") {
-          this.#note(`browser dialog opened: ${this.#tab.dialog}`);
+          this.#effect(`browser dialog opened: ${this.#tab.dialog}`, { type: "dialog", detail: this.#tab.dialog ?? "" });
           const next = steps[done];
           if (next && !("dialog" in next)) {
             error = "A browser dialog opened; the remaining steps were not run. Answer it with a dialog step.";
             break;
           }
-        } else if (settled === "timeout") this.#note("page was still busy when Bits moved on");
+        } else if (settled === "timeout") this.#effect("page was still busy when Bits moved on", { type: "busy" });
       }
     } finally {
       this.#acting = false;
@@ -492,7 +541,35 @@ export class Computer {
     const snapshot = await this.snapshot();
     if (snapshot.url !== startUrl) observed.unshift(`now at ${snapshot.url}`);
     this.#observed = null;
-    return { ok: !error, done, error, observed, snapshot, ms: Math.round(performance.now() - t0) };
+    const ms = Math.round(performance.now() - t0);
+    this.#log({ kind: "act.end", act: this.#actId, at: new Date().toISOString(), ok: !error, done, error, ms, url: redactUrl(snapshot.url) });
+    return { ok: !error, done, error, observed, snapshot, ms };
+  }
+
+  #logStep(s: Step, i: number, since: number, error?: string) {
+    const action = Object.keys(s)[0] ?? "?";
+    const v = (s as Record<string, unknown>)[action];
+    const t = this.#lastTarget;
+    const entry: Extract<LogEntry, { kind: "step" }> = {
+      kind: "step",
+      act: this.#actId,
+      step: i,
+      at: new Date(since).toISOString(),
+      action,
+      ok: !error,
+      ms: Date.now() - since,
+      url: redactUrl(this.#tab.url),
+    };
+    if (typeof v === "number" && action !== "wait") entry.ref = v;
+    if (t) entry.target = { role: t.role, name: t.name };
+    if ("type" in s) entry.text = t?.secret ? "•••" : s.text;
+    if ("select" in s) entry.value = s.value;
+    if ("navigate" in s) entry.value = redactUrl(s.navigate);
+    if ("press" in s) entry.value = s.press;
+    if ("scroll" in s && typeof s.scroll === "string") entry.value = s.scroll;
+    if ("dialog" in s) entry.value = s.dialog;
+    if (error) entry.error = error;
+    this.#log(entry);
   }
 
   /** Disconnect. Bits' Chrome keeps running unless this process started it headless. */

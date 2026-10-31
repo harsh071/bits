@@ -6,7 +6,7 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, describe, test } from "node:test";
-import { Computer, findChrome, type WriteRequest } from "../src/index.ts";
+import { ActionLog, Computer, findChrome, formatTimeline, type LogEntry, type WriteRequest } from "../src/index.ts";
 import { keyEvents } from "../src/keys.ts";
 
 const PAGE = `<!doctype html><title>Fixture</title>
@@ -20,6 +20,7 @@ const PAGE = `<!doctype html><title>Fixture</title>
 <div id="row" style="cursor:pointer" onmousedown="document.getElementById('out').textContent='row'">Open row</div>
 <form onsubmit="event.preventDefault();document.getElementById('out').textContent='searched:'+this.q.value"><input name="q" placeholder="Search"></form>
 <a href="/two">Next page</a>
+<input type="password" aria-label="Password">
 <button onclick="window.open('/two')">Pop out</button>
 <button onclick="document.getElementById('dlg').showModal()">Open modal</button>
 <dialog id="dlg"><h2>Confirm</h2><button onclick="this.closest('dialog').close()">Close modal</button></dialog>
@@ -33,6 +34,7 @@ describe("Computer", { skip: !chrome && "no Chrome installed" }, () => {
   let base = "";
   const posts: string[] = [];
   let decide: (w: WriteRequest) => "allow" | "deny" = () => "allow";
+  const logged: LogEntry[] = [];
   const held: WriteRequest[] = [];
   let c: Computer;
   let profile = "";
@@ -59,9 +61,11 @@ describe("Computer", { skip: !chrome && "no Chrome installed" }, () => {
     c = await Computer.start({
       profileDir: profile,
       headless: true,
+      onLog: (e) => void logged.push(e),
       onWrite: async (w) => {
         held.push(w);
-        return decide(w);
+        const decision = decide(w);
+        return { decision, by: "test", reason: decision === "deny" ? "not asked for" : "asked for" };
       },
     });
   });
@@ -196,6 +200,48 @@ describe("Computer", { skip: !chrome && "no Chrome installed" }, () => {
     assert.match(r.snapshot.text, /Tab \d of 2/);
   });
 
+  test("the log ties each write to the step that caused it", async () => {
+    await c.act([{ navigate: base }]);
+    logged.length = 0;
+    const s = await c.snapshot();
+    decide = () => "deny";
+    await c.act([{ type: ref(s.text, "Name"), text: "Ann" }, { click: ref(s.text, "Save") }], { task: "save the order", turn: "t1" });
+    decide = () => "allow";
+    const act = logged.find((e) => e.kind === "act");
+    assert.ok(act && act.kind === "act");
+    assert.equal(act.task, "save the order");
+    assert.equal(act.turn, "t1");
+    const steps = logged.filter((e) => e.kind === "step");
+    assert.deepEqual(steps.map((e) => e.kind === "step" && [e.action, e.target?.name, e.ok]), [["type", "Name", true], ["click", "Save", true]]);
+    const write = logged.find((e) => e.kind === "effect" && e.type === "write");
+    assert.ok(write && write.kind === "effect");
+    assert.equal(write.step, 1, "caused by step 2, the click");
+    assert.equal(write.act, act.act);
+    assert.equal(write.outcome, "blocked");
+    assert.equal(write.by, "test");
+    assert.equal(write.reason, "not asked for");
+    assert.equal(write.bodyBytes, 3);
+    assert.doesNotMatch(JSON.stringify(logged), /"body"/, "request bodies are not stored");
+    assert.ok(logged.at(-1)?.kind === "act.end");
+  });
+
+  test("text typed into a password field is not logged", async () => {
+    logged.length = 0;
+    const s = await c.snapshot();
+    await c.act([{ type: ref(s.text, "Password"), text: "hunter2" }]);
+    assert.doesNotMatch(JSON.stringify(logged), /hunter2/);
+    assert.match(JSON.stringify(logged), /•••/);
+  });
+
+  test("navigations are logged, without query strings", async () => {
+    logged.length = 0;
+    await c.act([{ navigate: `${base}/two?token=secret` }]);
+    const nav = logged.find((e) => e.kind === "effect" && e.type === "navigate");
+    assert.ok(nav && nav.kind === "effect");
+    assert.equal(nav.url, `${base}/two`);
+    assert.doesNotMatch(JSON.stringify(logged), /secret/);
+  });
+
   test("a vanished ref gives a clear error", async () => {
     const r = await c.act([{ click: 99999 }]);
     assert.equal(r.ok, false);
@@ -218,3 +264,24 @@ async function outText(c: Computer) {
   const m = /^(saved:\d+|save failed|deleted|row|searched:\S+|far)$/m.exec(t);
   return m?.[1] ?? "";
 }
+
+test("ActionLog writes one file per day and reads it back as a timeline", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "bits-log-test-"));
+  try {
+    const log = new ActionLog(dir);
+    const at = new Date().toISOString();
+    log.write({ v: 1, kind: "act", act: "a1", at, url: "https://mail.example.com/", steps: 1, task: "archive the top email" });
+    log.write({ v: 1, kind: "step", act: "a1", step: 0, at, action: "click", ref: 12, target: { role: "button", name: "Archive" }, ok: true, ms: 84, url: "https://mail.example.com/" });
+    log.write({ v: 1, kind: "effect", act: "a1", step: 0, at, type: "write", method: "POST", url: "https://mail.example.com/sync", outcome: "allowed", by: "you" });
+    log.write({ v: 1, kind: "act.end", act: "a1", at, ok: true, done: 1, ms: 300, url: "https://mail.example.com/" });
+    assert.equal(log.days().length, 1);
+    const entries = log.read();
+    assert.equal(entries.length, 4);
+    const t = formatTimeline(entries);
+    assert.match(t, /"archive the top email"/);
+    assert.match(t, /✓ 1\. click button "Archive"/);
+    assert.match(t, /⏸ → sent POST mail\.example\.com\/sync by you/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
