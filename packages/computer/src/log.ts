@@ -12,63 +12,12 @@
 
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import type { ActionLogEntry, WriteDecisionInfo } from "@bits/protocol";
 
 export const LOG_VERSION = 1;
 
-/** Who decided on a held write, and why. */
-export interface Decision {
-  decision: "allow" | "deny";
-  /** e.g. "you", "sentinel", "policy" */
-  by?: string;
-  reason?: string;
-}
-
-export type LogEntry =
-  | {
-      kind: "act";
-      act: string;
-      at: string;
-      url: string;
-      steps: number;
-      /** What the agent was trying to do, in the user's words, when the caller knows it. */
-      task?: string;
-      /** Links back to the conversation turn that asked for this. */
-      turn?: string;
-    }
-  | {
-      kind: "step";
-      act: string;
-      step: number;
-      at: string;
-      action: string;
-      ref?: number;
-      /** What was pressed, as the page named it. */
-      target?: { role: string; name: string };
-      text?: string;
-      value?: string;
-      ok: boolean;
-      error?: string;
-      ms: number;
-      url: string;
-    }
-  | {
-      kind: "effect";
-      act: string;
-      step: number;
-      at: string;
-      type: "write" | "navigate" | "new-tab" | "dialog" | "busy";
-      method?: string;
-      url?: string;
-      /** For writes: sent (nothing checked it), allowed or blocked (it was held first). */
-      outcome?: "sent" | "allowed" | "blocked";
-      by?: string;
-      reason?: string;
-      bodyBytes?: number;
-      /** Caused by the act after its steps finished (e.g. a debounced save). */
-      late?: boolean;
-      detail?: string;
-    }
-  | { kind: "act.end"; act: string; at: string; ok: boolean; done: number; error?: string; ms: number; url: string };
+export type Decision = WriteDecisionInfo;
+export type LogEntry = ActionLogEntry;
 
 export type LogSink = (e: LogEntry & { v: number }) => void;
 
@@ -82,7 +31,8 @@ export function redactUrl(url: string): string {
   }
 }
 
-const day = (d = new Date()) => d.toISOString().slice(0, 10);
+/** Local calendar day, so "today" matches your clock. */
+const day = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 
 /** Appends entries to <dir>/<YYYY-MM-DD>.jsonl. */
 export class ActionLog {

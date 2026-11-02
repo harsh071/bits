@@ -1,4 +1,4 @@
-import { AppWindow, Brain, House, Moon, MessageCircle, Plug, Plus, Sun } from "lucide-react";
+import { AppWindow, Brain, House, Moon, MessageCircle, MousePointerClick, Plug, Plus, Sun } from "lucide-react";
 import { useArtifacts } from "../store/artifacts";
 import { HOME, useChat } from "../store/chat";
 import { useTheme } from "../store/theme";
@@ -99,6 +99,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             setView("artifacts");
           })}
         />
+        <NavItem active={view === "actions"} icon={<MousePointerClick size={16} />} label="Browser activity" onClick={go(() => setView("actions"))} />
         <NavItem active={view === "memory"} icon={<Brain size={16} />} label="What Bits knows" onClick={go(() => setView("memory"))} />
         <NavItem active={view === "connectors"} icon={<Plug size={16} />} label="Connectors" onClick={go(() => setView("connectors"))} />
       </nav>

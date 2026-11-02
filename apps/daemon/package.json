@@ -16,6 +16,7 @@
     "@ai-sdk/anthropic": "4.0.85",
     "@ai-sdk/openai": "4.0.99",
     "@ai-sdk/openai-compatible": "3.0.75",
+    "@bits/computer": "workspace:*",
     "@bits/protocol": "workspace:*",
     "@hono/node-server": "2.1.5",
     "@modelcontextprotocol/sdk": "1.32.1",

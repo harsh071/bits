@@ -1,4 +1,5 @@
 import type {
+  ActionLogDay,
   AddConnectorBody,
   ConnectorInfo,
   ConnectorsOverview,
@@ -117,6 +118,7 @@ export const api = {
     request<Approval>("POST", `/approvals/${encodeURIComponent(id)}`, { decision }),
 
   memory: () => request<MemoryOverview>("GET", "/memory"),
+  actions: (date?: string) => request<ActionLogDay>("GET", `/actions${date ? `?date=${encodeURIComponent(date)}` : ""}`),
   saveProfile: (content: string) => request<{ ok: true }>("PUT", "/memory/profile", { content }),
   log: (month: string) => request<{ content: string }>("GET", `/memory/log/${encodeURIComponent(month)}`),
   skill: (name: string) =>

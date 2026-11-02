@@ -331,3 +331,70 @@ export interface TelegramStatus {
   pairUrl: string | null;
   error: string | null;
 }
+
+// ---------- browser action log (packages/computer, ~/.bits/actions) ----------
+// Every step Bits takes in its browser and everything that step caused.
+// Effects point at the step that caused them through `act` + `step`.
+
+/** Who decided on a held write, and why. */
+export interface WriteDecisionInfo {
+  decision: "allow" | "deny";
+  /** e.g. "you", "sentinel", "policy" */
+  by?: string;
+  reason?: string;
+}
+
+export type ActionLogEntry =
+  | {
+      kind: "act";
+      act: string;
+      at: string;
+      url: string;
+      steps: number;
+      /** What the agent was trying to do, in the user's words, when the caller knows it. */
+      task?: string;
+      /** Links back to the conversation turn that asked for this. */
+      turn?: string;
+    }
+  | {
+      kind: "step";
+      act: string;
+      step: number;
+      at: string;
+      action: string;
+      ref?: number;
+      /** What was pressed, as the page named it. */
+      target?: { role: string; name: string };
+      text?: string;
+      value?: string;
+      ok: boolean;
+      error?: string;
+      ms: number;
+      url: string;
+    }
+  | {
+      kind: "effect";
+      act: string;
+      step: number;
+      at: string;
+      type: "write" | "navigate" | "new-tab" | "dialog" | "busy";
+      method?: string;
+      url?: string;
+      /** For writes: sent (nothing checked it), allowed or blocked (it was held first). */
+      outcome?: "sent" | "allowed" | "blocked";
+      by?: string;
+      reason?: string;
+      bodyBytes?: number;
+      /** Caused by the act after its steps finished (e.g. a debounced save). */
+      late?: boolean;
+      detail?: string;
+    }
+  | { kind: "act.end"; act: string; at: string; ok: boolean; done: number; error?: string; ms: number; url: string };
+
+/** GET /api/actions?date=YYYY-MM-DD */
+export interface ActionLogDay {
+  date: string;
+  /** Days that have a log, oldest first. */
+  days: string[];
+  entries: (ActionLogEntry & { v: number })[];
+}

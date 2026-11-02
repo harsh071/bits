@@ -32,6 +32,9 @@ importers:
       '@ai-sdk/openai-compatible':
         specifier: 3.0.75
         version: 3.0.75(zod@4.6.7)
+      '@bits/computer':
+        specifier: workspace:*
+        version: link:../../packages/computer
       '@bits/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
@@ -141,6 +144,10 @@ importers:
         version: 8.3.5(@types/node@26.6.5)(jiti@2.7.0)
 
   packages/computer:
+    dependencies:
+      '@bits/protocol':
+        specifier: workspace:*
+        version: link:../protocol
     devDependencies:
       '@types/node':
         specifier: ^26.6.5
