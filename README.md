@@ -29,6 +29,7 @@ Requires Node 24+ (24.16+ recommended; uses the built-in SQLite) and pnpm. Data 
 | Path | What |
 | --- | --- |
 | `packages/protocol` | Shared types: messages, live events, the generative UI catalog |
+| `packages/computer` | Fast browser control over CDP: page snapshots, batched actions, held writes |
 | `apps/daemon` | The agent: queue, durable loop, Sentinel, memory, routines, connectors, voice, HTTP/SSE API |
 | `apps/web` | React app: chat, generative UI renderer, memory view, voice mode, quick-ask overlay |
 | `apps/desktop` | Electron shell: tray, global hotkey overlay, notifications, starts the daemon |

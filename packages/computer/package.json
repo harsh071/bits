@@ -1,0 +1,17 @@
+{
+  "name": "@bits/computer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fast browser control for Bits: reads the page's controls over CDP instead of screenshots, and holds outgoing writes for review.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --test --test-force-exit test/*.test.ts",
+    "try": "node --disable-warning=ExperimentalWarning src/cli.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "7.0.2"
+  }
+}
