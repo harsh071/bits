@@ -20,21 +20,9 @@ export interface ThreadProps {
 }
 
 /** Static mini mascot used as the assistant avatar. */
+/** The still mascot shown next to finished replies. */
 export function MiniBit({ size = 22 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden className="flex-none">
-      <defs>
-        <radialGradient id="minibit" cx="38%" cy="30%" r="75%">
-          <stop offset="0" stopColor="#B8A6FF" />
-          <stop offset=".55" stopColor="#8A6CFF" />
-          <stop offset="1" stopColor="#5E3DF0" />
-        </radialGradient>
-      </defs>
-      <circle cx="32" cy="32" r="28" fill="url(#minibit)" />
-      <rect x="22" y="21" width="6.5" height="15" rx="3.25" fill="#fff" />
-      <rect x="35.5" y="21" width="6.5" height="15" rx="3.25" fill="#fff" />
-    </svg>
-  );
+  return <Mascot still size={size} title="Bits" />;
 }
 
 const enter = { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.28, ease: "easeOut" } } as const;

@@ -7,7 +7,8 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
     "noUnusedLocals": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": { "@bits-demo": ["./src/demo/api.ts"] }
   },
   "include": ["src", "vite.config.ts"]
 }

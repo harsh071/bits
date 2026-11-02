@@ -1,0 +1,13 @@
+# Never upload secrets or local state.
+.env*
+**/.env*
+.bits-dev
+*.log
+.DS_Store
+
+# Not needed to build the site + demo.
+node_modules
+**/node_modules
+**/dist
+**/dist-demo
+apps/desktop

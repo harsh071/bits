@@ -2,6 +2,7 @@ import { AppWindow, Brain, House, Moon, MessageCircle, Plug, Plus, Sun } from "l
 import { useArtifacts } from "../store/artifacts";
 import { HOME, useChat } from "../store/chat";
 import { useTheme } from "../store/theme";
+import { useMascotStyle } from "../store/mascot";
 import { shortTime } from "../lib/text";
 import { Mascot } from "./Mascot";
 import { useAgentStatus } from "../lib/status";
@@ -52,6 +53,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const setView = useChat((s) => s.setView);
   const newConversation = useChat((s) => s.newConversation);
   const { dark, cycle } = useTheme();
+  const mascotStyle = useMascotStyle((s) => s.style);
+  const toggleMascot = useMascotStyle((s) => s.toggle);
+  const otherMascot = mascotStyle === "binary" ? "pixel" : "binary";
   const status = useAgentStatus(activeId);
 
   const dotFor = (id: string) => {
@@ -124,6 +128,16 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className="flex items-center justify-between border-t border-line px-4 py-3 text-[12px] text-faint">
         <span>Local · private</span>
+        <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={toggleMascot}
+          aria-label={`Switch Bits to the ${otherMascot} look`}
+          title={otherMascot === "pixel" ? "Pixel look" : "Binary look"}
+          className="grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-surface"
+        >
+          <Mascot variant={otherMascot} still size={16} title="" />
+        </button>
         <button
           type="button"
           onClick={cycle}
@@ -133,6 +147,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         >
           {dark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
+        </div>
       </div>
     </div>
   );

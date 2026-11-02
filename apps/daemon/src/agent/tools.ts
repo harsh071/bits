@@ -8,6 +8,9 @@ import * as memory from "../memory.ts";
 import type { Store } from "../store.ts";
 import { checkProgram, formatIssues, type Artifacts } from "../artifacts.ts";
 
+// A string-keyed map. z.record() emits JSON Schema "propertyNames", which OpenAI rejects with a warning.
+const dict = <T extends z.ZodType>(value: T) => z.object({}).catchall(value);
+
 // Every capability Bits has is a tool with a risk level. The Sentinel (sentinel.ts) decides,
 // per call, whether a risk level can run on its own, needs a quick auto-review, or needs you.
 //
@@ -372,10 +375,10 @@ Every action becomes a button handler, a tool you can call (artifact_run), and a
       description: z.string(),
       icon: z.string().optional().describe("lucide icon name"),
       program: z.string(),
-      data: z.record(z.string(), z.unknown()),
-      actions: z.record(z.string(), z.object({
+      data: dict(z.unknown()),
+      actions: dict(z.object({
         description: z.string(),
-        input: z.record(z.string(), z.unknown()).optional(),
+        input: dict(z.unknown()).optional(),
         ops: z.array(z.object({ op: z.enum(["set", "merge", "push", "remove", "increment", "toggle"]), path: z.string(), value: z.unknown().optional(), by: z.number().optional() })).min(1),
         confirm: z.boolean().optional(),
         notify: z.boolean().optional(),
@@ -397,7 +400,7 @@ Every action becomes a button handler, a tool you can call (artifact_run), and a
       title: z.string().optional(),
       description: z.string().optional(),
       program: z.string().optional(),
-      actions: z.record(z.string(), z.any()).optional(),
+      actions: dict(z.any()).optional(),
     }),
     risk: "write",
     activity: () => "Updating an artifact",
@@ -409,7 +412,7 @@ Every action becomes a button handler, a tool you can call (artifact_run), and a
   tool({
     name: "artifact_run",
     description: "Run one of an artifact's declared actions, exactly as if the user pressed its button.",
-    input: z.object({ id: z.string(), action: z.string(), input: z.record(z.string(), z.unknown()).optional() }),
+    input: z.object({ id: z.string(), action: z.string(), input: dict(z.unknown()).optional() }),
     risk: "write",
     activity: (i) => `Updating ${i.id?.replace(/-[a-z0-9]{6}$/, "") ?? "artifact"}`,
     async execute({ id, action, input }, ctx) {

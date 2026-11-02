@@ -1,0 +1,30 @@
+{
+  "name": "@bits/site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Bits launch site. The demo app is built from apps/web into dist/demo.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:launch": "vite build && pnpm --filter @bits/web build:demo && node ./scripts/copy-demo.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "lucide-react": "1.61.0",
+    "motion": "14.5.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
+  }
+}

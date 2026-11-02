@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Bits: the open-source agent that stays awake for you</title>
+    <meta
+      name="description"
+      content="Bits is an open-source, local-first, always-on personal agent. It runs on your own computer, remembers what matters in plain files, and answers with interfaces you can use."
+    />
+    <meta property="og:title" content="Bits" />
+    <meta property="og:description" content="An open-source, local-first agent that stays awake for you." />
+    <meta property="og:image" content="/launch-poster.svg" />
+    <meta name="theme-color" content="#FBFAF7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#131218" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;450;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Same theme preference as the app (and the demo), applied before first paint.
+      (function () {
+        try {
+          var t = localStorage.getItem("bits.theme");
+          if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -247,7 +247,7 @@ function Page({ id, onMenu }: { id: string; onMenu: () => void }) {
             {meta?.description && <p className="truncate text-[13.5px] text-muted">{meta.description}</p>}
           </div>
           <a
-            href={`/?artifact=${encodeURIComponent(id)}`}
+            href={`${import.meta.env.BASE_URL}?artifact=${encodeURIComponent(id)}`}
             target="_blank"
             rel="noreferrer"
             title="Open on its own page (pin it for browser agents)"

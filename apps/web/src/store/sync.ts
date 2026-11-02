@@ -1,6 +1,8 @@
 import type { ServerEvent } from "@bits/protocol";
 import { eventsUrl, onReachability } from "../api";
 import { useChat } from "./chat";
+import { DEMO } from "../lib/demo";
+import { onDemoEvent } from "@bits-demo";
 
 type Handler = (ev: ServerEvent) => void;
 const handlers = new Set<Handler>();
@@ -23,6 +25,7 @@ let started = false;
 export function startSync() {
   if (started) return;
   started = true;
+  if (DEMO) return startDemoSync();
 
   let es: EventSource | null = null;
   let attempt = 0;
@@ -114,4 +117,18 @@ export function startSync() {
   });
 
   connect();
+}
+
+/** Demo mode: events come from the in-memory demo daemon instead of SSE. */
+function startDemoSync() {
+  const chat = useChat.getState;
+  chat().setConnection("online");
+  onDemoEvent((ev) => {
+    chat().applyEvent(ev);
+    for (const fn of handlers) fn(ev);
+  });
+  chat().loadConversations().catch(() => {});
+  chat().loadApprovals().catch(() => {});
+  void chat().fetchAfter(chat().activeId);
+  for (const fn of reconnectHooks) fn();
 }
