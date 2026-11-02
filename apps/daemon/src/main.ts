@@ -9,6 +9,7 @@ import { connectors } from "./connectors.ts";
 import { createApp } from "./server.ts";
 import { Artifacts } from "./artifacts.ts";
 import { Telegram } from "./channels/telegram.ts";
+import { closeBrowser } from "./agent/browser.ts";
 
 // Bits daemon: the always-on part. Clients (web, desktop overlay, phone, channels) are thin views
 // over the same conversations; the daemon runs the agent, routines and memory.
@@ -42,6 +43,7 @@ async function main() {
     scheduler.stop();
     await telegram.stop();
     runtime.stop();
+    await closeBrowser();
     stopWatching();
     await connectors.close();
     server.close();

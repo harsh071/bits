@@ -11,6 +11,7 @@ import type { ArtifactActivity, ArtifactMeta } from "@bits/protocol";
 import { buildInstructions, estimateTokens, toModelMessages } from "./context.ts";
 import { alwaysAllow, review } from "./sentinel.ts";
 import { builtinTools, type ToolDef } from "./tools.ts";
+import { browserTools } from "./browser.ts";
 
 const LEASE_MS = 30_000;
 const MID_TURN_COMPACT_TOKENS = 150_000;
@@ -45,7 +46,7 @@ export class Runtime {
   }
 
   get tools(): ToolDef[] {
-    return [...builtinTools, ...this.extraTools()];
+    return [...builtinTools, ...(process.env.BITS_BROWSER === "0" ? [] : browserTools), ...this.extraTools()];
   }
 
   start() {

@@ -5,6 +5,7 @@ import {
   FilePen,
   FileText,
   Globe,
+  MousePointerClick,
   Plug,
   Search,
   Sparkles,
@@ -72,6 +73,21 @@ export function toolMeta(call: ToolCall): ToolMeta {
       label: done ? "Searched the web" : "Searching the web",
       detail: [q && `“${clip(q, 40)}”`, count != null && plural(count, "result")].filter(Boolean).join(" · "),
     };
+  }
+  if (name.startsWith("browser_")) {
+    const op = name.slice(8);
+    if (op === "open") {
+      const url = field(input, "url");
+      return { icon: Globe, label: done ? "Opened" : "Opening", detail: url ? host(/^[a-z]+:/i.test(url) ? url : `https://${url}`) : undefined };
+    }
+    if (op === "act") {
+      const steps = (input as { steps?: unknown[] } | undefined)?.steps;
+      const n = Array.isArray(steps) ? steps.length : 0;
+      return { icon: MousePointerClick, label: done ? "Used the page" : "Using the page", detail: n ? `${n} step${n === 1 ? "" : "s"}` : undefined };
+    }
+    if (op === "read") return { icon: Globe, label: done ? "Read the page" : "Reading the page" };
+    if (op === "tabs") return { icon: Globe, label: done ? "Checked tabs" : "Checking tabs" };
+    return { icon: Globe, label: done ? "Looked at the page" : "Looking at the page" };
   }
   if (name === "web_fetch") {
     const url = field(input, "url");
