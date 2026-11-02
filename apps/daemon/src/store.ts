@@ -259,6 +259,18 @@ export class Store {
     return r ? { output: JSON.parse(r.output), isError: !!r.is_error } : null;
   }
 
+  /**
+   * Intent, written before a tool runs. A row that is started but never finished means the daemon died
+   * mid-call, and the side effect may or may not have happened.
+   */
+  startToolRun(toolCallId: string, turnId: string, toolName: string) {
+    this.db.prepare("INSERT OR IGNORE INTO tool_runs (tool_call_id, turn_id, tool_name, finished_at) VALUES (?, ?, ?, NULL)").run(toolCallId, turnId, toolName);
+  }
+
+  toolRunInterrupted(toolCallId: string): boolean {
+    return !!this.db.prepare("SELECT 1 FROM tool_runs WHERE tool_call_id = ? AND finished_at IS NULL").get(toolCallId);
+  }
+
   saveToolRun(toolCallId: string, turnId: string, toolName: string, output: unknown, isError: boolean) {
     this.db
       .prepare(
@@ -300,11 +312,59 @@ export class Store {
     return (rows as Row[]).map(rowToApproval);
   }
 
+  /**
+   * Decide an approval and, if it was the turn's last pending one, put the waiting turn back in the queue.
+   * One transaction, so a crash can't leave an approved turn parked in "waiting" forever.
+   */
   decideApproval(id: string, status: "approved" | "denied"): Approval | null {
-    this.db.prepare("UPDATE approvals SET status = ? WHERE id = ? AND status = 'pending'").run(status, id);
+    const requeued = tx(this.db, () => {
+      const changed = this.db.prepare("UPDATE approvals SET status = ? WHERE id = ? AND status = 'pending' RETURNING turn_id").get(status, id) as Row | undefined;
+      return changed ? this.requeueIfSettled(changed.turn_id) : null;
+    });
     const approval = this.getApproval(id);
     if (approval) bus.emit({ type: "approval", approval });
+    if (requeued) this.emitTurn(requeued);
     return approval;
+  }
+
+  /** A new message instead of an answer: decline everything the turn is waiting on and requeue it (atomically). */
+  denyPending(turnId: string) {
+    const { denied, requeued } = tx(this.db, () => ({
+      denied: this.db.prepare("UPDATE approvals SET status = 'denied' WHERE turn_id = ? AND status = 'pending' RETURNING id").all(turnId) as Row[],
+      requeued: this.requeueIfSettled(turnId),
+    }));
+    for (const r of denied) bus.emit({ type: "approval", approval: this.getApproval(r.id)! });
+    if (requeued) this.emitTurn(requeued);
+  }
+
+  /**
+   * Startup repair: waiting turns with nothing left to wait for (a crash between deciding and requeueing,
+   * in databases from before that was one transaction) go back in the queue.
+   */
+  requeueSettledTurns() {
+    const rows = this.db
+      .prepare(
+        "UPDATE turns SET status = 'queued', updated_at = ? WHERE status = 'waiting' AND NOT EXISTS (SELECT 1 FROM approvals a WHERE a.turn_id = turns.id AND a.status = 'pending') RETURNING id",
+      )
+      .all(Date.now()) as Row[];
+    for (const r of rows) this.emitTurn(r.id);
+    return rows.length;
+  }
+
+  private requeueIfSettled(turnId: string): string | null {
+    const r = this.db
+      .prepare(
+        "UPDATE turns SET status = 'queued', updated_at = ? WHERE id = ? AND status = 'waiting' AND NOT EXISTS (SELECT 1 FROM approvals WHERE turn_id = ? AND status = 'pending') RETURNING id",
+      )
+      .get(Date.now(), turnId, turnId) as Row | undefined;
+    return r ? turnId : null;
+  }
+
+  private emitTurn(turnId: string) {
+    const t = this.getTurn(turnId);
+    if (!t) return;
+    bus.emit({ type: "turn", conversationId: t.conversationId, turnId, status: t.status });
+    bus.emit({ type: "conversations" });
   }
 
   // ---------- kv ----------

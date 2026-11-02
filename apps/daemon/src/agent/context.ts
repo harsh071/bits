@@ -59,8 +59,9 @@ const LADDER = (connectors: string[]) => `## Try the cheapest option first
 1. What you already know — profile, memory log, skills (memory_search).
 2. A connector (app API)${connectors.length ? `: ${connectors.slice(0, 30).join(", ")}` : " — none connected yet"}.
 3. Web search (web_search, web_fetch).
-4. Your own computer: shell and files in your workspace (run_command, read_file, write_file).
-5. Ask the user (ask_user).
+4. Your browser (browser_open, browser_act): websites that need the user's login or clicking. It's fast: read the numbered controls, then batch several steps in one browser_act. If a site asks you to sign in, ask the user to sign in in the Bits browser window.
+5. Your own computer: shell and files in your workspace (run_command, read_file, write_file).
+6. Ask the user (ask_user).
 If a connector is broken or unauthorized, do NOT work around it with other tools — tell the user what failed and ask.
 Some actions pass through a safety reviewer. If an action is denied, don't retry it another way; explain and ask.
 For big research or parallel work, use spawn_helper so your context stays focused.`;

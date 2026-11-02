@@ -13,6 +13,19 @@ const page = await c.open("news.ycombinator.com");
 const r = await c.act([{ click: 12 }]);
 ```
 
+## Action log
+
+Every step Bits takes, and everything that step caused, goes to `~/.bits/actions/YYYY-MM-DD.jsonl` (pass `onLog`; see `src/log.ts`). Each sent or blocked request points at the click that caused it.
+
+```
+17:57:51  "try logging in"  ·  news.ycombinator.com/login  ·  2 step(s)
+  ✓ 1. type textbox "" ← "demo"  8ms
+  ✓ 2. press  = "Enter"  13ms
+       ⛔ blocked POST news.ycombinator.com/login by sentinel: the user only asked to read
+```
+
+Read it with `pnpm --filter @bits/computer log` (`--json`, a date, or `--days`). Only Bits' own actions are logged, never your browsing. Request bodies aren't stored (only their size), URLs drop query strings, and password fields log as `•••`.
+
 Try it by hand: `pnpm --filter @bits/computer try https://news.ycombinator.com`
 
 The CDP client (`src/cdp.ts`) is adapted from RUI's.

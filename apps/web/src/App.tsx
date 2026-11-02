@@ -6,6 +6,7 @@ import { Sidebar } from "./components/Sidebar";
 import { ChatView } from "./components/ChatView";
 import { MemoryView } from "./components/MemoryView";
 import { ConnectorsView } from "./components/ConnectorsView";
+import { ActionsView } from "./components/ActionsView";
 import { ArtifactsView } from "./artifacts/ArtifactsView";
 import { ArtifactPanel } from "./artifacts/ArtifactPanel";
 import { ConnectionBanner } from "./components/ConnectionBanner";
@@ -63,6 +64,8 @@ export function App() {
           <MemoryView onMenu={() => setSheet(true)} />
         ) : view === "connectors" ? (
           <ConnectorsView onMenu={() => setSheet(true)} />
+        ) : view === "actions" ? (
+          <ActionsView onMenu={() => setSheet(true)} />
         ) : view === "artifacts" ? (
           <ArtifactsView onMenu={() => setSheet(true)} />
         ) : (

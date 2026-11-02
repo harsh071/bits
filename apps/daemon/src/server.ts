@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import type { HealthInfo, MemoryOverview, ServerEvent, VoiceConfig } from "@bits/protocol";
+import type { ActionLogDay, HealthInfo, MemoryOverview, ServerEvent, VoiceConfig } from "@bits/protocol";
+import { ActionLog } from "@bits/computer";
 import { bus } from "./bus.ts";
 import { config } from "./config.ts";
 import * as memory from "./memory.ts";
@@ -27,6 +28,8 @@ const MIME: Record<string, string> = {
   ".woff2": "font/woff2",
   ".webmanifest": "application/manifest+json",
 };
+
+const localDay = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 
 export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, artifacts: Artifacts, telegram?: Telegram) {
   const app = new Hono();
@@ -152,6 +155,15 @@ export function createApp(store: Store, runtime: Runtime, scheduler: Scheduler, 
   });
 
   // ----- artifacts -----
+  // ---- browser action log ----
+  app.get("/api/actions", (c) => {
+    const log = new ActionLog(config.paths.actions);
+    const days = log.days();
+    const asked = c.req.query("date");
+    const date = asked && /^\d{4}-\d{2}-\d{2}$/.test(asked) ? asked : (days.at(-1) ?? localDay());
+    return c.json({ date, days, entries: log.read(date) } satisfies ActionLogDay);
+  });
+
   app.get("/api/artifacts", (c) => c.json(artifacts.list()));
   app.get("/api/artifacts/:id", (c) => {
     const id = c.req.param("id");

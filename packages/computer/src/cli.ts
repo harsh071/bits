@@ -2,25 +2,28 @@
 //
 // Opens Bits' Chrome (profile in ~/.bits/chrome, or $BITS_HOME/chrome) and gives you a prompt:
 //   open <url> | snap [all] | text | click <ref> | type <ref> <text> | enter <ref> <text>
-//   press <key> | select <ref> <value> | scroll up|down | back | dialog accept|dismiss | tabs | tab <n> | quit
+//   press <key> | select <ref> <value> | scroll up|down | back | dialog accept|dismiss | tabs | tab <n> | log | quit
 // Writes your actions cause (POST/PUT/PATCH/DELETE) are held and you answer y/n.
+// Everything is written to the action log (~/.bits/actions); `log` shows today's.
 
 import os from "node:os";
 import path from "node:path";
 import readline from "node:readline/promises";
-import { Computer, type Step } from "./index.ts";
+import { ActionLog, Computer, formatTimeline, type Step } from "./index.ts";
 
 const home = process.env.BITS_HOME ?? path.join(os.homedir(), ".bits");
+const log = new ActionLog(path.join(home, "actions"));
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 let asking = Promise.resolve();
 
 const c = await Computer.start({
   profileDir: path.join(home, "chrome"),
   headless: process.argv.includes("--headless"),
+  onLog: log.write,
   onWrite: (w) => {
     const answer = asking.then(() => rl.question(`\n  ⏸  ${w.method} ${w.url}\n     allow? [y/N] `));
     asking = answer.then(() => {});
-    return answer.then((a) => (/^y/i.test(a.trim()) ? "allow" : "deny"));
+    return answer.then((a) => ({ decision: /^y/i.test(a.trim()) ? "allow" : "deny", by: "you" }) as const);
   },
 });
 
@@ -58,13 +61,14 @@ for (;;) {
     if (line.startsWith("open ")) print(await c.open(line.slice(5).trim()));
     else if (line === "snap" || line === "snap all") print(await c.snapshot({ all: line.endsWith("all") }));
     else if (line === "text") console.log(await c.text());
+    else if (line === "log") console.log(formatTimeline(log.read()) || "(nothing logged today)");
     else if (line === "tabs") console.table(await c.tabs());
     else if (line.startsWith("tab ")) print(await c.useTab(Number(line.slice(4))));
     else {
       // Several steps in one go: separate with ";", e.g.  type 4 hello; click 7
       const steps = line.split(";").map((s) => parse(s.trim()));
       if (steps.some((s) => !s)) {
-        console.log("?  open <url> | snap [all] | text | click N | type N text | enter N text | press Key | select N value | scroll up|down|N | back | dialog accept|dismiss | tabs | tab N | quit");
+        console.log("?  open <url> | snap [all] | text | log | click N | type N text | enter N text | press Key | select N value | scroll up|down|N | back | dialog accept|dismiss | tabs | tab N | quit");
         continue;
       }
       const r = await c.act(steps as Step[]);

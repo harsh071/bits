@@ -22,6 +22,10 @@ export const config = {
     routines: path.join(home, "routines"),
     workspace: path.join(home, "workspace"),
     connectors: path.join(home, "connectors.json"),
+    /** Browser action log, one JSONL file per day (written by @bits/computer). */
+    actions: path.join(home, "actions"),
+    /** Bits' own Chrome profile. */
+    chrome: path.join(home, "chrome"),
   },
   model: process.env.BITS_MODEL ?? defaultModel(),
   fastModel: process.env.BITS_FAST_MODEL ?? process.env.BITS_MODEL ?? defaultFastModel(),

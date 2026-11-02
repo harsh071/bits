@@ -202,12 +202,14 @@
     target(ref) {
       const el = byRef(ref);
       if (!el) return { error: "gone" };
+      const role = roleOf(el) || "clickable";
+      const who = { role, name: nameOf(el, role), secret: el.type === "password" || el.autocomplete === "current-password" };
       let r = el.getBoundingClientRect();
       if (r.top < 0 || r.bottom > innerHeight || r.left < 0 || r.right > innerWidth) {
         el.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
         r = el.getBoundingClientRect();
       }
-      if (r.width < 1 || r.height < 1) return { error: "hidden" };
+      if (r.width < 1 || r.height < 1) return { error: "hidden", ...who };
       const hits = (x, y) => {
         let hit = document.elementFromPoint(x, y);
         while (hit?.shadowRoot) {
@@ -229,13 +231,14 @@
         const x = Math.min(Math.max(r.left + r.width * fx, 0), innerWidth - 1);
         const y = Math.min(Math.max(r.top + r.height * fy, 0), innerHeight - 1);
         const h = hits(x, y);
-        if (h.ok) return { x, y, w: r.width, h: r.height, rect: { x: r.left, y: r.top } };
+        if (h.ok) return { x, y, w: r.width, h: r.height, ...who };
         cover ??= h.hit;
       }
-      const role = cover ? roleOf(cover) : "";
+      const coverRole = cover ? roleOf(cover) : "";
       return {
         error: "covered",
-        cover: cover ? clean(`${role || cover.tagName.toLowerCase()} "${nameOf(cover, role)}"`, 80) : "nothing",
+        cover: cover ? clean(`${coverRole || cover.tagName.toLowerCase()} "${nameOf(cover, coverRole)}"`, 80) : "nothing",
+        ...who,
       };
     },
 

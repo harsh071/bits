@@ -39,6 +39,11 @@ export interface ToolDef<I = any> {
   endsTurn?: boolean;
   /** Excluded from helper subagents. */
   mainOnly?: boolean;
+  /**
+   * Never run again after a crash, even though its own risk is "read" (it can cause sends indirectly).
+   * Only "read" tools are replayed; everything else reports the interruption to the model instead.
+   */
+  noReplay?: boolean;
   execute: (input: I, ctx: ToolContext) => Promise<unknown>;
 }
 
@@ -493,6 +498,7 @@ Every action becomes a button handler, a tool you can call (artifact_run), and a
     input: z.object({ task: z.string(), context: z.string().optional().describe("facts the helper needs") }),
     risk: "read",
     mainOnly: true,
+    noReplay: true, // a helper's own tools can send things
     activity: (i) => `Helper: ${i.task.slice(0, 40)}`,
     async execute({ task, context }, ctx) {
       return { report: await ctx.runHelper(task, context, ctx.signal) };
