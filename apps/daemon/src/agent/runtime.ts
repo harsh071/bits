@@ -52,6 +52,7 @@ export class Runtime {
   start() {
     // We are the only daemon on this machine: anything still "running" belongs to a dead process.
     this.store.db.exec("UPDATE turns SET lease_until = 0 WHERE status = 'running'");
+    this.store.requeueSettledTurns();
     this.ticker = setInterval(() => this.tick(), 1000);
     this.tick();
   }
@@ -89,10 +90,7 @@ export class Runtime {
     if (active) {
       if (active.status === "waiting") {
         // A new message instead of an approval: decline what was pending and let the turn read the message.
-        for (const a of this.store.listApprovals("pending").filter((a) => a.turnId === active.id)) {
-          this.store.decideApproval(a.id, "denied");
-        }
-        this.store.updateTurn(active.id, { status: "queued" });
+        this.store.denyPending(active.id);
         this.tick();
       }
       return { message, duplicate, turnId: active.id, steering: true };
@@ -146,15 +144,12 @@ export class Runtime {
   }
 
   decideApproval(id: string, decision: "approve" | "deny" | "always") {
+    const pending = this.store.getApproval(id);
+    if (!pending) return null;
+    // Policy first: it's idempotent, so a crash before the decision below just means asking once more.
+    if (decision === "always" && pending.status === "pending") alwaysAllow(pending.toolName);
     const approval = this.store.decideApproval(id, decision === "deny" ? "denied" : "approved");
-    if (!approval) return null;
-    if (decision === "always") alwaysAllow(approval.toolName);
-    const turn = this.store.getTurn(approval.turnId);
-    const stillPending = this.store.listApprovals("pending").some((a) => a.turnId === approval.turnId);
-    if (turn?.status === "waiting" && !stillPending) {
-      this.store.updateTurn(turn.id, { status: "queued" });
-      this.tick();
-    }
+    this.tick();
     return approval;
   }
 
@@ -336,6 +331,18 @@ export class Runtime {
     const cached = this.store.getToolRun(call.toolCallId);
     if (cached) return cached;
 
+    // Started before and never finished: the daemon died mid-call. Reads run again; anything that may have
+    // changed the world is reported instead, so an approved send can't go out twice.
+    if (this.store.toolRunInterrupted(call.toolCallId) && (def.risk !== "read" || def.noReplay)) {
+      const out = {
+        output:
+          "Interrupted: Bits restarted while this was running, so it may or may not have happened. Check whether it did before trying again; a retry is a new call and goes through review again.",
+        isError: true,
+      };
+      this.store.saveToolRun(call.toolCallId, turn.id, call.toolName, out.output, true);
+      return out;
+    }
+
     const approval = this.store.approvalForCall(call.toolCallId);
     if (approval?.status === "pending") return "wait";
     if (approval?.status === "denied") {
@@ -365,6 +372,8 @@ export class Runtime {
       if (!parsed.success) return { output: `Invalid input: ${parsed.error.message}`, isError: true };
       input = parsed.data;
     }
+
+    this.store.startToolRun(call.toolCallId, turn.id, call.toolName);
     this.store.updateTurn(turn.id, {}, safeActivity(def, input));
     let output: unknown;
     let isError = false;

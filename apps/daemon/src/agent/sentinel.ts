@@ -29,19 +29,44 @@ interface Policy {
 
 const policyFile = path.join(config.home, "policy.json");
 
-export function loadPolicy(): Policy {
+// Fails closed: no file means no rules, but a file that can't be read means "ask before everything",
+// never "no deny rules".
+const ASK_ALL: Policy = { allow: [], ask: ["*"], deny: [] };
+
+function readPolicy(): { policy: Policy; ok: boolean } {
+  let raw: string;
   try {
-    const p = JSON.parse(fs.readFileSync(policyFile, "utf8"));
-    return { allow: p.allow ?? [], ask: p.ask ?? [], deny: p.deny ?? [] };
-  } catch {
-    return { allow: [], ask: [], deny: [] };
+    raw = fs.readFileSync(policyFile, "utf8");
+  } catch (err: any) {
+    return err?.code === "ENOENT" ? { policy: { allow: [], ask: [], deny: [] }, ok: true } : { policy: ASK_ALL, ok: false };
+  }
+  try {
+    const p = JSON.parse(raw);
+    const list = (v: unknown) => (Array.isArray(v) && v.every((x) => typeof x === "string") ? v : null);
+    const allow = list(p.allow ?? []);
+    const ask = list(p.ask ?? []);
+    const deny = list(p.deny ?? []);
+    if (!allow || !ask || !deny) throw new Error("allow, ask and deny must be lists of tool names");
+    return { policy: { allow, ask, deny }, ok: true };
+  } catch (err: any) {
+    console.error(`[bits] ${policyFile} can't be read (${err.message}); asking before every tool until it's fixed.`);
+    return { policy: ASK_ALL, ok: false };
   }
 }
 
+export function loadPolicy(): Policy {
+  return readPolicy().policy;
+}
+
 export function alwaysAllow(toolName: string) {
-  const p = loadPolicy();
-  if (!p.allow.includes(toolName)) p.allow.push(toolName);
-  fs.writeFileSync(policyFile, JSON.stringify(p, null, 2) + "\n");
+  const { policy: p, ok } = readPolicy();
+  if (!ok) throw new Error(`${policyFile} can't be read, so it wasn't changed. Fix or delete it, then try again.`);
+  if (p.allow.includes(toolName)) return;
+  p.allow.push(toolName);
+  // Write a temp file and rename it over the old one: a crash leaves the old policy or the new one, never half.
+  const tmp = `${policyFile}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(p, null, 2) + "\n");
+  fs.renameSync(tmp, policyFile);
 }
 
 const glob = (pattern: string, name: string) =>
