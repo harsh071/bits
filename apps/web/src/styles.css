@@ -444,7 +444,7 @@ body {
   --ag-font: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --ag-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --ag-shadow: var(--shadow-lg);
-  --ag-motion-grad: linear-gradient(100deg, var(--a-violet), var(--a-blue) 55%, var(--a-rose));
+  --ag-motion-fill: var(--accent);
   --ag-motion-radius: 20px;
 }
 

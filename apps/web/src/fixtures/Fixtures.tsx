@@ -28,6 +28,13 @@ refunds = Stat("Refunds", "9", "-2", "down")
 note = Callout("On track", "Revenue is ahead of target by 4%.", "success")`,
   },
   {
+    name: "motion: Scene (water cycle, drawn by the model)",
+    title: "The water cycle",
+    program: `root = Stack([scene, layers])
+scene = Scene([{shape: "pill", x: 50, y: 92, w: 900, h: 60, color: "#5b8def", opacity: 0.85}, {shape: "circle", x: 84, y: 18, size: 54, color: "#f2b441", motion: "pulse", speed: 0.5, z: -20}, {shape: "pill", x: 30, y: 22, w: 120, h: 40, color: "muted", opacity: 0.35, motion: "drift", speed: 0.4, z: 30}, {shape: "pill", x: 52, y: 16, w: 90, h: 30, color: "muted", opacity: 0.3, motion: "drift", speed: 0.6, z: 20}, {shape: "diamond", x: 26, y: 40, size: 14, color: "#5b8def", motion: "float", z: 40}, {shape: "diamond", x: 34, y: 52, size: 12, color: "#5b8def", motion: "float", delay: 400, z: 40}, {kind: "line", x: 66, y: 80, x2: 72, y2: 36, color: "muted"}, {kind: "line", x: 74, y: 80, x2: 80, y2: 40, color: "muted"}, {kind: "text", x: 76, y: 60, text: "Evaporation", size: 12, color: "ink", weight: 600, z: 40}, {kind: "text", x: 40, y: 10, text: "Condensation", size: 12, color: "ink", weight: 600, z: 40}, {kind: "text", x: 18, y: 64, text: "Precipitation", size: 12, color: "ink", weight: 600, z: 40}, {kind: "text", x: 50, y: 92, text: "Collection", size: 12, color: "bg", weight: 600, z: 50}], height: 300, background: "panel", tilt: true, label: "Water evaporates from the sea, condenses into clouds, falls as rain and collects again")
+layers = Layers([{title: "Atmosphere", detail: "Water vapour cools and condenses into clouds.", tag: "gas"}, {title: "Surface", detail: "Rivers, lakes and the sea collect what falls.", tag: "liquid"}, {title: "Ground", detail: "Some soaks in and becomes groundwater.", tag: "aquifer"}], title: "Where the water is")`,
+  },
+  {
     name: "motion: learn (Headline + Rings + Flashcards + Quiz)",
     program: `root = Stack([hero, rings, deck, quiz])
 hero = Headline("Spanish in 5 minutes", sub: "Today: greetings", eyebrow: "Day 3 streak", highlight: ["Spanish"], size: "md")

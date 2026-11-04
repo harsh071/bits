@@ -186,7 +186,7 @@ packages:
     resolution: {integrity: sha512-gHegR0QAESzjy6YNv7sVtcp35EpVrTi8v6w42k3xGOtP5HfL6NcqqcW6/0wQ9GOH0d8wqdQqKVtLv/BenME2lQ==}
 
   '@agentable-ui/motion@file:vendor/agentable-ui-motion-0.1.0.tgz':
-    resolution: {integrity: sha512-D539zjG4wFpihPiBeUx+xDyXyRpKjRIpQNBg/B1BgZGA+lSI9hUoDcwGjpBagqZq56A5t9iOO6xhK71V9BbGvQ==, tarball: file:vendor/agentable-ui-motion-0.1.0.tgz}
+    resolution: {integrity: sha512-mtAOCOKeLZzTagKfXtuAZTJW+uqLbQoq3UXM37T3pV6K3RAijGNbYaN4/bEfr3cpaY48dIxOlDvrO1I8zBvSNw==, tarball: file:vendor/agentable-ui-motion-0.1.0.tgz}
     version: 0.1.0
     peerDependencies:
       react: ^18.2.0 || ^19.0.0
