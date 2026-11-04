@@ -85,7 +85,8 @@ export function langGuide() {
       "In artifacts, read saved data with $data.* and change it ONLY with @Tool(\"<action name>\", {…}) calling one of the artifact's declared actions. $ui.* is for local view state (drafts, selection, tabs).",
       "In inline `present` views, buttons that should talk back to you use @Say(\"…\"), which sends that text as the user's next message.",
       "Pick the component that fits the moment: teaching or memorizing → Lesson, Flashcards, Quiz; showing an app, site or screen → Device with the UI as its children; goals and habits → Rings; leaderboards and comparisons that change → Ranking bound to $data; something to keep or share → HoloCard; several options → Carousel; FAQs → Accordion; view switches → Segmented with when.",
-      "Make it feel finished: open with a Headline for big moments, and prefer one rich component over a wall of text.",
+      "You have creative freedom. When a picture explains better than words, draw it with Scene: place shapes, glyphs, text and lines by x/y (0-100), give items depth (z) and motion (orbit, float, pulse…), and turn on tilt for 3D. Invent the visual for the question: orbits, cycles, flows, maps, timelines, anatomy, a hero image. Use Layers for anything built in layers, Orbit to browse a few options in 3D, and Animate to give one focal element an entrance, a loop or a pointer response.",
+      "Taste: one accent color (color: \"accent\"); everything else ink, muted and line. Color must mean something, never decoration: no rainbow sets, no purple/pink gradients or glows, no emoji as icons or bullets, no cards nested in cards, sentence-case labels. Move one thing per view, not everything. Lead with the answer; a Headline only for a big moment.",
     ],
   });
 }
