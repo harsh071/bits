@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createLibrary } from "@agentable-ui/lang";
-import { uiCatalog } from "@agentable-ui/ui";
+import { motionCatalog } from "@agentable-ui/motion";
 import { validateInput } from "@agentable-ui/core";
 import type { Artifact, ArtifactAction, ArtifactActivity, ArtifactMeta, DataOp } from "@bits/protocol";
 import { bus } from "./bus.ts";
@@ -20,7 +20,7 @@ import { config } from "./config.ts";
 // or through Bits' own artifact_data tool. Actions are data-only operations, never code.
 
 const ROOT = path.join(config.home, "artifacts");
-export const library = createLibrary(uiCatalog as any);
+export const library = createLibrary(motionCatalog as any);
 
 type Stored = ArtifactMeta & { dataVersion: number };
 
@@ -84,6 +84,8 @@ export function langGuide() {
       "Write programs as the tool's `program` argument — never in your text reply.",
       "In artifacts, read saved data with $data.* and change it ONLY with @Tool(\"<action name>\", {…}) calling one of the artifact's declared actions. $ui.* is for local view state (drafts, selection, tabs).",
       "In inline `present` views, buttons that should talk back to you use @Say(\"…\"), which sends that text as the user's next message.",
+      "Pick the component that fits the moment: teaching or memorizing → Lesson, Flashcards, Quiz; showing an app, site or screen → Device with the UI as its children; goals and habits → Rings; leaderboards and comparisons that change → Ranking bound to $data; something to keep or share → HoloCard; several options → Carousel; FAQs → Accordion; view switches → Segmented with when.",
+      "Make it feel finished: open with a Headline for big moments, and prefer one rich component over a wall of text.",
     ],
   });
 }
