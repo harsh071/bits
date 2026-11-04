@@ -444,6 +444,8 @@ body {
   --ag-font: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --ag-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --ag-shadow: var(--shadow-lg);
+  --ag-motion-grad: linear-gradient(100deg, var(--a-violet), var(--a-blue) 55%, var(--a-rose));
+  --ag-motion-radius: 20px;
 }
 
 /* Light polish so generated UI reads like the rest of Bits. */
@@ -518,4 +520,20 @@ dialog[data-agentable-confirm] button {
 }
 [data-bits-genui] [data-agentable-button] {
   justify-content: center;
+}
+
+/* Motion components (@agentable-ui/motion) in Bits' look. */
+[data-bits-genui] [data-agentable-flashcard-face],
+[data-bits-genui] [data-agentable-quiz-choice],
+[data-bits-genui] [data-agentable-accordion] {
+  box-shadow: var(--shadow-sm);
+}
+[data-bits-genui] [data-agentable-headline] h2 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+[data-bits-genui] [data-agentable-segmented-track] button,
+[data-bits-genui] [data-agentable-quiz-choice] {
+  font-family: var(--ag-font);
 }

@@ -13,6 +13,7 @@
     "@agentable-ui/core": "0.2.0",
     "@agentable-ui/genui": "0.3.2",
     "@agentable-ui/lang": "0.3.0",
+    "@agentable-ui/motion": "file:../../vendor/agentable-ui-motion-0.1.0.tgz",
     "@agentable-ui/react": "0.1.1",
     "@agentable-ui/ui": "0.2.1",
     "@bits/protocol": "workspace:*",

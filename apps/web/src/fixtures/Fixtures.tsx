@@ -28,6 +28,34 @@ refunds = Stat("Refunds", "9", "-2", "down")
 note = Callout("On track", "Revenue is ahead of target by 4%.", "success")`,
   },
   {
+    name: "motion: learn (Headline + Rings + Flashcards + Quiz)",
+    program: `root = Stack([hero, rings, deck, quiz])
+hero = Headline("Spanish in 5 minutes", sub: "Today: greetings", eyebrow: "Day 3 streak", highlight: ["Spanish"], size: "md")
+rings = Rings([{label: "Words", value: 18, max: 20}, {label: "Minutes", value: 4, max: 5}, {label: "Streak", value: 3, max: 7}])
+deck = Flashcards([{front: "Hola", back: "Hello"}, {front: "Buenos días", back: "Good morning"}, {front: "¿Qué tal?", back: "How's it going?"}], title: "Greetings")
+quiz = Quiz([{question: "How do you say good night?", choices: ["Buenas noches", "Buenos días", "Hola"], answer: 0, explain: "Noche is night."}], title: "Quick check")`,
+  },
+  {
+    name: "motion: device mockup",
+    title: "Your morning, on your phone",
+    program: `root = Device("phone", caption: "What the morning brief looks like on Telegram", float: true, children: [card])
+card = Card("Good morning", "Tuesday · 3 things today", [stats, todo, go])
+stats = StatGroup([s1, s2])
+s1 = Stat("Focus", "2h 40m", "+18m", "up")
+s2 = Stat("Inbox", "12", "-9", "down")
+todo = Checklist([{id: 1, text: "Reply to Maya", done: true}, {id: 2, text: "Book the dentist"}])
+go = Button("Plan my day", "primary", press: @Say("Plan my day around those three things"))`,
+  },
+  {
+    name: "motion: lesson + holo + accordion",
+    program: `root = Stack([lesson, grid, faq])
+lesson = Lesson([{emoji: "🌱", title: "Compound interest", body: "You earn interest on your interest."}, {emoji: "📈", title: "Time matters most", body: "$1,000 at 7% doubles about every 10 years.", code: "1000 × 1.07^10 ≈ 1967"}], title: "Money basics")
+grid = Grid(2, [card1, rank])
+card1 = HoloCard("Saver", "Saved 30 days in a row", emblem: "🐷", stats: [{label: "Saved", value: "$420"}, {label: "Streak", value: "30d"}], footer: "Rare · Nov 2026", foil: "aurora")
+rank = Ranking([{label: "Rent", value: 1800, icon: "🏠", display: "$1,800"}, {label: "Food", value: 640, icon: "🍜", display: "$640"}, {label: "Travel", value: 410, icon: "✈️", display: "$410"}], title: "Where it went")
+faq = Accordion([{title: "Is this financial advice?", body: "No, it is a worked example."}], open: 0)`,
+  },
+  {
     name: "form with $ui + @Say",
     program: `root = Card("Dinner tonight", "Pick a few things and I’ll find recipes", [cuisine, guests, veg, go, note])
 cuisine = Select("Cuisine", ["Italian", "Thai", "Mexican", "Japanese"], $ui.cuisine, "Any", change: @Set($ui.cuisine, $event))

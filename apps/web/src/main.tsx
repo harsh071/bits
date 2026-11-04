@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { MotionConfig } from "motion/react";
 import { AgentableProvider } from "@agentable-ui/react";
 import "@agentable-ui/ui/styles.css";
+import "@agentable-ui/motion/styles.css";
 import "./styles.css";
 import { App } from "./App";
 import { Overlay } from "./overlay/Overlay";

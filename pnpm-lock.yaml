@@ -20,6 +20,9 @@ importers:
       '@agentable-ui/lang':
         specifier: 0.3.0
         version: 0.3.0
+      '@agentable-ui/motion':
+        specifier: file:../../vendor/agentable-ui-motion-0.1.0.tgz
+        version: file:vendor/agentable-ui-motion-0.1.0.tgz(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@agentable-ui/ui':
         specifier: 0.2.1
         version: 0.2.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -87,6 +90,9 @@ importers:
       '@agentable-ui/lang':
         specifier: 0.3.0
         version: 0.3.0
+      '@agentable-ui/motion':
+        specifier: file:../../vendor/agentable-ui-motion-0.1.0.tgz
+        version: file:vendor/agentable-ui-motion-0.1.0.tgz(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@agentable-ui/react':
         specifier: 0.1.1
         version: 0.1.1(react@19.3.1)
@@ -179,6 +185,13 @@ packages:
   '@agentable-ui/lang@0.3.0':
     resolution: {integrity: sha512-gHegR0QAESzjy6YNv7sVtcp35EpVrTi8v6w42k3xGOtP5HfL6NcqqcW6/0wQ9GOH0d8wqdQqKVtLv/BenME2lQ==}
 
+  '@agentable-ui/motion@file:vendor/agentable-ui-motion-0.1.0.tgz':
+    resolution: {integrity: sha512-D539zjG4wFpihPiBeUx+xDyXyRpKjRIpQNBg/B1BgZGA+lSI9hUoDcwGjpBagqZq56A5t9iOO6xhK71V9BbGvQ==, tarball: file:vendor/agentable-ui-motion-0.1.0.tgz}
+    version: 0.1.0
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+      react-dom: ^18.2.0 || ^19.0.0
+
   '@agentable-ui/react@0.1.1':
     resolution: {integrity: sha512-WrlmciUgkxJuWpl8WXUj+3/pjy4U6iTK1/uuNih/XhdJUWKOvLMzjcvz5QY4Kck5FuDOA7lo6bYm0YLSx/Gr5Q==}
     peerDependencies:
@@ -266,6 +279,33 @@ packages:
 
   '@oxc-project/types@0.154.0':
     resolution: {integrity: sha512-KYOUGQFlLWR+s4QMV2Q9ko38TZm7EdO87Qm7rvZLqk/webse/cDjtyxKhg/47l0byCbs/k46LT8qc4PKjAikzA==}
+
+  '@react-spring/animated@10.1.2':
+    resolution: {integrity: sha512-yAsQ/bbp6+vko7WNCI1M00c6KLE9XKTGCrgRhQqS4JcK3oF5qBV4rHYrQEprvEvYXxt+1H5FsLS2eVValEPfFw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@react-spring/core@10.1.2':
+    resolution: {integrity: sha512-lPGOAg0V+PV3ucopOajD+YCxoe8twALqAeG4c/+sqVjBsyUNNdx8qfz/DcNSPKA8PV3+AyQELlCxlDfap9cmBQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@react-spring/rafz@10.1.2':
+    resolution: {integrity: sha512-KC6vSFZyPnRJ2rXqipV9QqR4SaYbYXjvKfdYKWipNK2mWuV79gr20WmpVUOsTiEHGRY3WSOdWCHN+P9Pdaqb7Q==}
+
+  '@react-spring/shared@10.1.2':
+    resolution: {integrity: sha512-47/8bNQ/o0uEmxEnPBuERlC29VSqiTn5P9ln9tUMSVkYKYxBtouYE686F5kAGj+eHRPoNCw7drxWE9nv2d1LMw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@react-spring/types@10.1.2':
+    resolution: {integrity: sha512-G4CWowmVPz+rDG1y9QRVq/prZNxiNwQaHC0kgT/MgY6jAGgdRgTV4VThpvJDwWvUitk3xZB4soP4d36fjeQ09g==}
+
+  '@react-spring/web@10.1.2':
+    resolution: {integrity: sha512-KxDB3zaDqy9qFsu7fdxjyraAxweHH4k5TW5WGT/OuMK6hKaxSDfhrQfRBzfFaSVvMBf+NghbJFanllV4ia6i7A==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   '@rolldown/binding-android-arm-eabi@1.2.14':
     resolution: {integrity: sha512-aWR+XKH9+rW7m5fWq/5360J3mHycrx/o6xZM2DQFdJnTMdyP7/WzxPjhtLbVWdKo2y612/4U1bWqb3HQhiF7vg==}
@@ -623,6 +663,14 @@ packages:
 
   '@ungap/structured-clone@1.4.0':
     resolution: {integrity: sha512-1mEZtMKPM09vDmQt5y7YvmN2+DFTP7Tg0EWXdic8/C6VRnpb33e4ghisCIE3WZjsE2N8mf+QV1Zqh7ZFYLWInQ==}
+
+  '@use-gesture/core@10.3.1':
+    resolution: {integrity: sha512-WcINiDt8WjqBdUXye25anHiNxPc0VOrlT8F6LLkU6cycrOGUDyY/yyFmsg3k8i5OLvv25llc0QC45GhR/C8llw==}
+
+  '@use-gesture/react@10.3.1':
+    resolution: {integrity: sha512-Yy19y6O2GJq8f7CHf7L0nxL8bf4PZCPaVOCgJrusOeFHY1LvHgYXnmnXg6N5iwAnbgbZCDjo60SiM6IPJi9C5g==}
+    peerDependencies:
+      react: '>= 16.8.0'
 
   '@vercel/oidc@3.2.0':
     resolution: {integrity: sha512-UycprH3T6n3jH0k44NHMa7pnFHGu/N05MjojYr+Mc6I7obkoLIJujSWwin1pCvdy/eOxrI/l3uDLQsmcrOb4ug==}
@@ -1720,6 +1768,16 @@ snapshots:
     dependencies:
       '@agentable-ui/core': 0.2.0
 
+  '@agentable-ui/motion@file:vendor/agentable-ui-motion-0.1.0.tgz(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      '@agentable-ui/core': 0.2.0
+      '@agentable-ui/react': 0.1.1(react@19.3.1)
+      '@agentable-ui/ui': 0.2.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@react-spring/web': 10.1.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@use-gesture/react': 10.3.1(react@19.3.1)
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+
   '@agentable-ui/react@0.1.1(react@19.3.1)':
     dependencies:
       '@agentable-ui/core': 0.2.0
@@ -1831,6 +1889,39 @@ snapshots:
       - supports-color
 
   '@oxc-project/types@0.154.0': {}
+
+  '@react-spring/animated@10.1.2(react@19.3.1)':
+    dependencies:
+      '@react-spring/shared': 10.1.2(react@19.3.1)
+      '@react-spring/types': 10.1.2
+      react: 19.3.1
+
+  '@react-spring/core@10.1.2(react@19.3.1)':
+    dependencies:
+      '@react-spring/animated': 10.1.2(react@19.3.1)
+      '@react-spring/shared': 10.1.2(react@19.3.1)
+      '@react-spring/types': 10.1.2
+      react: 19.3.1
+
+  '@react-spring/rafz@10.1.2': {}
+
+  '@react-spring/shared@10.1.2(react@19.3.1)':
+    dependencies:
+      '@react-spring/rafz': 10.1.2
+      '@react-spring/types': 10.1.2
+      react: 19.3.1
+
+  '@react-spring/types@10.1.2': {}
+
+  '@react-spring/web@10.1.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      '@react-spring/animated': 10.1.2(react@19.3.1)
+      '@react-spring/core': 10.1.2(react@19.3.1)
+      '@react-spring/shared': 10.1.2(react@19.3.1)
+      '@react-spring/types': 10.1.2
+      csstype: 3.2.3
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
 
   '@rolldown/binding-android-arm-eabi@1.2.14':
     optional: true
@@ -2050,6 +2141,13 @@ snapshots:
     optional: true
 
   '@ungap/structured-clone@1.4.0': {}
+
+  '@use-gesture/core@10.3.1': {}
+
+  '@use-gesture/react@10.3.1(react@19.3.1)':
+    dependencies:
+      '@use-gesture/core': 10.3.1
+      react: 19.3.1
 
   '@vercel/oidc@3.2.0': {}
 
